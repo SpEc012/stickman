@@ -1,0 +1,61 @@
+# EMBER BLADES — design doc
+
+A single-file (`index.html`) 2D stickman saber duel. Canvas 2D + WebAudio, no assets, no libraries.
+
+## Architecture
+
+| Section | Responsibility |
+|---|---|
+| **Core** | Fixed 60 Hz simulation (`simStep`) fed by an accumulator scaled by `timeScale` (slow-mo). Rendering interpolates every frame with `alpha`, including *animation time*, so slow-mo and 120 Hz displays stay smooth. Seeded RNG for the sim. |
+| **Input** | Keyboard, Gamepad API and touch buttons all write into a `Pad` (held bits + 7-frame press buffer). The AI writes into the same `Pad`, so fighters never know who drives them. |
+| **Camera** | Tracks the midpoint with look-ahead, zooms in when fighters are close and out when apart, trauma-based shake, tilt, zoom punch, cinematic focus override. |
+| **Physics / Collision** | Point-mass fighter bodies (gravity, friction, push-boxes, wall bounce, ring-out). Per-frame AABB hitboxes from move data vs. state-dependent hurtboxes. |
+| **Animation** | 16-channel pose (pelvis, lean, hand target, blade angle, foot targets, rotation, squash) → 2-bone IK for both arms and legs → 15 joints. Keyframed clips with easing/overshoot, snapshot cross-fades, procedural walk cycle (distance-driven so feet plant), breathing, landing squash. |
+| **Physics toys** | Verlet ragdoll (launches, knockdowns, KOs) pinned to the gameplay point mass, verlet cape chain, spark particles with gravity + floor bounce, bridge debris. |
+| **Fighter** | State machine below; meters (HP, Focus, Force, Guard); swept-blade trail ring buffer sampled at 3 sub-steps per tick. |
+| **Combat** | Hit / block / perfect parry / clash / saber-lock / throw / guard-break / force powers / ultimate cinematic, hit-stop, combo scaling, juggle limit. |
+| **AI** | Utility scoring over ~14 actions + reaction queue (delay per tier) + habit tracker of the player's last 24 actions; boss-only moves. |
+| **VFX** | Object-pooled sparks, dust, rings, flares, domes, ghosts, pop text, lightning (midpoint displacement), speed lines, embers, rain. |
+| **Renderer** | Cached tileable parallax layers, animated perspective lava floor, wavy additive reflections, heat haze, layered additive blades, saber light pools, thresholded bloom, chromatic pulse, vignette, grain, scanlines. Dynamic quality scaler. |
+| **Audio** | Procedural WebAudio: saber hum (pitch follows swing speed), whoosh, clash, parry chime, lightning crackle, thuds, steps, lava rumble, generative score (drone, taiko, choir pad, ostinato) driven by fight intensity. |
+| **UI / Flow** | Title (attract-mode duel) → menu → select → VS card → round intro → fight → KO → results. Pause, options, controls, training tools, F1 debug overlay. |
+
+## Fighter state machine
+
+```
+            +--------- hit ---------> HIT ----(stun over)----+
+            |                                                v
+ INTRO -> STAND <-> CROUCH      LAUNCH -> DOWN -> GETUP -> STAND
+            |  \-> JUMP -> (land)   ^ (launcher / air hit / push / KO)
+            |-> DASH / BACKDASH     |
+            |-> ATK (startup > active > recovery, cancel windows)
+            |-> BLOCK (parry window 6f on press) -> blockstun / PARRY
+            |-> CAST (push, pull, lightning, storm)
+            |-> STAGGER (parried, guard crushed, lock lost, pulled)
+            |-> LOCK (saber-lock mash)   ULT / ULTV (cinematic)
+            |-> THROW -> victim THROWN -> LAUNCH
+            +-> WIN / DEAD
+```
+
+## Frame data (60 fps)
+
+| Move | Input | Startup | Active | Total | Dmg | Hitstun | Blockstun | Guard dmg | Level | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Light 1 | J | 6 | 3 | 22 | 6 | 17 | 11 | 7 | mid | cancels → Light 2 |
+| Light 2 | J,J | 7 | 3 | 25 | 7 | 18 | 12 | 8 | mid | cancels → Light 3 |
+| Light 3 | J,J,J | 9 | 4 | 36 | 10 | 24 | 15 | 12 | mid | big knockback, special-cancel |
+| Heavy overhead | K | 16 | 4 | 46 | 16 | 28 | 20 | 24 | high | cancels on hit → Rising launcher |
+| Rising launcher | S+K or K,K | 13 | 4 | 44 | 13 | launch | 18 | 16 | mid | launches for juggles |
+| Low sweep | S+J | 9 | 4 | 32 | 8 | trip | 12 | 8 | low | knockdown |
+| Air slash | J (air) | 7 | 7 | — | 9 | 20 | 13 | 8 | high | |
+| Somersault slash | K (air) | 10 | 9 | — | 13 | 24 | 16 | 14 | high | |
+| Dash attack | U then J/K | 8 | 5 | 34 | 12 | 24 | 16 | 14 | mid | afterimages |
+| Throw | I+J | 5 | 2 | 30 | 12 | launch | — | — | — | beats block |
+| Guard break | I+K | 20 | 4 | 52 | 10 | 30 | crush | — | — | 35 Focus, unblockable |
+| Force push | L | 11 | 1 | 34 | 7 | launch | — | 10 | — | 30 Force |
+| Force pull | S+L | 12 | 1 | 30 | 0 | stagger | — | 6 | — | 22 Force |
+| Lightning | →+L (hold) | 14 | ≤70 | +16 | 0.45/f | — | — | drains | — | 25 Force + 0.5/f, parry reflects |
+| Duel of Fates | O | 12 | 6 | 50 | ~40 | cinematic | 24 | 20 | mid | 100 Focus |
+
+Perfect parry: block pressed ≤ 6 frames (100 ms) before impact. Block = 10 % chip. Guard bar empties → guard crush.
+Two clashes in a row (or heavy vs heavy) → saber lock.
