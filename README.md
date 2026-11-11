@@ -3,7 +3,7 @@
 A fast 2D stickman saber fighter on a volcanic world: story duels, local versus, mass brawls against bots, and **online lobbies for up to 50 fighters**.
 
 - The whole game is one file, `index.html` — Canvas 2D and WebAudio, no assets, no libraries, no build step.
-- Online play needs `server.js` running somewhere — a small Node program with no dependencies.
+- Online play needs the game server running somewhere. It has no dependencies and comes in two forms that share the same logic (`hub.mjs`): `server.js` for Node, and `worker.mjs` for Cloudflare Workers.
 
 ## Play
 
@@ -20,25 +20,50 @@ Then open `http://localhost:8080`. Other people on your network can join at `htt
 
 The page and the game server are two separate things.
 
-1. **The page** (`index.html`, `og.jpg`, icons) is static. This repository already deploys it with GitHub Pages; point your domain at Pages in *Settings → Pages → Custom domain*.
-2. **The game server** (`server.js`) must run on a host that keeps a Node process alive — a small VPS, Render, Railway, Fly.io and similar all work. It needs Node 18 or newer and listens on `PORT` (default 8080). There is nothing to install:
+**The page** (`index.html`, `og.jpg`, icons) is static. This repository already deploys it with GitHub Pages; point your domain at Pages in *Settings → Pages → Custom domain*.
+
+**The game server** can run in either of two places.
+
+### Option A — Cloudflare Workers (page on GitHub, server on Cloudflare)
+
+Needs a free Cloudflare account and Node on your computer. In this folder:
+
+```bash
+npx wrangler login
+```
+
+```bash
+npx wrangler deploy
+```
+
+Wrangler prints the server's address, something like `https://stickman-battle-server.<your-name>.workers.dev`. Use it with `wss://` in step "Tell the page" below. If your domain's DNS is on Cloudflare you can also give the Worker a custom domain (for example `play.stickmanbattle.online`) in the Cloudflare dashboard.
+
+How it works: one Durable Object holds every lobby in memory (`worker.mjs`, configured by `wrangler.toml`). Things to know:
+
+- Every WebSocket message counts towards your Cloudflare usage, and each player sends about 30 small messages a second while fighting. Check Cloudflare's current Durable Objects limits for your plan before a big launch.
+- When Cloudflare restarts the object (after a deploy, for instance) everyone is disconnected and lobbies start empty.
+- This version was tested in Cloudflare's local runtime (`wrangler dev`), not on a live Cloudflare account.
+
+### Option B — any Node host
+
+A small VPS, Render, Railway, Fly.io and similar all work. Node 18 or newer, nothing to install, listens on `PORT` (default 8080):
 
 ```bash
 node server.js
 ```
 
-3. **Tell the page where the server is.** Near the top of the script in `index.html`, set:
+`server.js` also serves the page, share image and icons itself, so you can point the domain straight at it instead of using Pages. `GET /health` returns the number of open lobbies and connected players.
+
+### Tell the page where the server is
+
+Near the top of the script in `index.html`, set:
 
 ```js
-const SERVER_URL = 'wss://play.your-domain.com';
+const SERVER_URL = 'wss://stickman-battle-server.your-name.workers.dev';
 ```
 
-Notes:
-
-- A page served over `https://` can only connect to `wss://` (TLS). Managed hosts give you that automatically; on a VPS put Caddy or nginx in front of the Node port.
+- A page served over `https://` can only connect to `wss://`. Cloudflare and managed hosts give you that automatically; on a bare VPS put Caddy or nginx in front of the Node port.
 - Players can also type a server address on the online screen, or open the page with `?server=wss://…`.
-- Alternatively skip Pages and point the domain at the Node host: `server.js` serves the page, share image and icons itself.
-- `GET /health` returns the number of open lobbies and connected players.
 
 ### How online play works (and its limits)
 
@@ -86,8 +111,31 @@ Brawl maps have one-way platforms on two levels, and some have pits:
 | Block / parry | I | Numpad 5 or - | RB |
 | Ultimate | O | Numpad 6 or = | LB |
 
-`Esc` pause/menu · `Tab` scoreboard (brawls) · `M` mute · `F1` debug overlay · Training: `T` dummy, `H` hitboxes, `R` reset.
+**Mouse:** move it and the saber follows (see *Free saber* below). Left click = light, right click = heavy. Left-hand keys for mouse play: `Space` jump, `Q` force, `E` block, `Shift` dash, `X` ultimate.
+
+`Esc` pause/menu · `Tab` scoreboard (brawls) · `M` mute · `F` fullscreen · `F1` debug overlay · Training: `T` dummy, `H` hitboxes, `R` reset.
 Touch buttons appear automatically on touch screens.
+
+### Controllers
+
+Any controller the browser's Gamepad API sees works; plug it in and press a button. *Options → Controller* has:
+
+- **Rebinding** — pick an action, press the button you want. Three presets (Classic, Triggers, Fighter) or your own layout, saved per player.
+- **A live tester** — a drawing of the pad that lights up as you press, with the right button names for Xbox, PlayStation and Switch pads. On-screen prompts everywhere switch to those names the moment you touch the controller, and back when you touch the keyboard.
+- **Vibration** — off, low or full. Hits, blocks, parries, clashes, wall slams, ultimates and KOs each feel different. (Phones buzz instead.)
+- **Stick deadzone**, whether stick-up jumps, and whether the right stick aims the saber or flick-dashes.
+- **Versus** — two controllers are player 1 and player 2; with one controller you choose which player gets it.
+
+Menus are fully drivable from the pad (d-pad or stick, bottom button confirms, right button goes back, held directions repeat), there is an on-screen keyboard for your name and for lobby codes, `View/Share` shows the scoreboard, and unplugging the pad pauses an offline fight. Unusual pads that don't report the standard layout still move through their hat or axes and can simply be rebound.
+
+### Free saber (mouse or right stick)
+
+Move the mouse — or tilt the right stick — and the blade follows it on a spring, turning your fighter to face that side.
+
+- **Cut:** swing the blade through an enemy. Damage (3 to 9) grows with how far and how fast you swung; tiny wiggles do nothing. One sweep can hit several enemies in a brawl. Two swinging blades that meet clash.
+- **Guard:** hold the blade still between you and the attacker and it blocks — raised for overheads, lowered for sweeps. Flick it into place just before the hit and it is a perfect parry.
+- Button attacks, throws, Force powers and ultimates all still work alongside it. Turn it off in *Options* if you prefer buttons only.
+
 
 ## Moves
 
@@ -150,13 +198,16 @@ The simulation always runs at a fixed 60 ticks per second and the picture is int
 
 Everything was tested in headless Chromium on a machine without a GPU:
 
-- Full story runs, all arenas and maps, 50-fighter brawls, all four ultimates and three finishers, touch input and a simulated gamepad — no console errors.
-- Online: lobbies, joining by code, late joining, hits / blocks / kills across two and three real browser clients, a 50-fighter match, host migration, and a 50-connection load test (the server used a negligible share of one CPU core and about 60 MB of memory).
+- Full story runs, all arenas and maps, 50-fighter brawls, all four ultimates and three finishers, touch input — no console errors.
+- **Controllers:** 36 checks with simulated Xbox, PlayStation, Switch and non-standard pads (menus, rebinding, presets, rumble calls, stick aiming, hot-plug, versus assignment), plus creating a name and joining a lobby with a controller alone.
+- **Free saber:** sweeps, wiggles, blade guard and flick-parry timing against three attack types; replicated to a second client.
+- **Online:** lobbies, joining by code, late joining, hits / blocks / kills across two and three real browser clients, a 50-fighter match, host migration, and a 50-connection load test — against both the Node server and the Cloudflare Worker (in Cloudflare's local runtime).
 
 Not tested:
 
-- **Real network conditions.** All online tests ran on one machine, so there are no measurements with real latency or packet loss.
-- **Real hardware frame rates.** Without a GPU the game does not reach 60 FPS at full quality here; frame rates on a real graphics card are unmeasured, especially with 40+ fighters on screen.
-- **Audio** has never been listened to, and no physical phone, gamepad, Safari or Firefox was used.
+- **Real controllers and real rumble.** Everything above used simulated devices; no physical pad has been held, so feel (deadzones, rumble strength, stick aiming) is untuned by hand.
+- **A live Cloudflare deployment** and **real network conditions** (latency, packet loss). All online tests ran on one machine.
+- **Real hardware frame rates.** Without a GPU the game does not reach 60 FPS at full quality here.
+- **Audio** has never been listened to, and no physical phone, Safari or Firefox was used.
 
 `DESIGN.md` has the architecture, the netcode, the frame data and the AI tiers.

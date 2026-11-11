@@ -1,0 +1,13 @@
+# Cloudflare Workers config for the game server (worker.mjs + hub.mjs).
+#   npx wrangler deploy
+name = "stickman-battle-server"
+main = "worker.mjs"
+compatibility_date = "2025-06-01"
+
+[[durable_objects.bindings]]
+name = "HUB"
+class_name = "Hub"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Hub"]
