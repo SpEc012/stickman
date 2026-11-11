@@ -3,7 +3,7 @@
    EMBER BLADES — lobby + relay server.  No dependencies: `node server.js`.
 
    What it does
-     - serves index.html over HTTP (so one process hosts the whole game)
+     - serves index.html and its icons over HTTP (so one process can host the whole game)
      - speaks WebSocket (RFC 6455, implemented below) on the same port
      - lobbies: create / list / join by code / quick join, host settings, host migration
      - during a match it relays 18-byte fighter records and combat events, counts
@@ -32,14 +32,16 @@ const clampInt = (v, lo, hi, d) => { v = Math.floor(+v); return v >= lo && v <= 
 const cleanName = (s, d, max) => { s = String(s || '').replace(/[^\w \-.!?']/g, '').trim().slice(0, max || 14).toUpperCase(); return s || d; };
 
 /* ------------------------------ HTTP ------------------------------ */
-const INDEX = path.join(__dirname, 'index.html');
+// Static files: index.html plus the icons / share image that sit next to it. Only plain file names from this folder are served.
+const TYPES = { '.html': 'text/html; charset=utf-8', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json', '.txt': 'text/plain; charset=utf-8' };
 const server = http.createServer((req, res) => {
-  const url = req.url.split('?')[0];
-  if (url === '/health') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end(JSON.stringify({ ok: true, rooms: rooms.size, players: conns.size })); }
-  if (req.method !== 'GET' || (url !== '/' && url !== '/index.html')) { res.writeHead(404); return res.end('not found'); }
-  fs.readFile(INDEX, (err, data) => {
-    if (err) { res.writeHead(500); return res.end('index.html is missing next to server.js'); }
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); res.end(data);
+  const url = decodeURIComponent(req.url.split('?')[0]);
+  if (url === '/health') { res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' }); return res.end(JSON.stringify({ ok: true, rooms: rooms.size, players: conns.size })); }
+  const name = url === '/' ? 'index.html' : url.slice(1), type = TYPES[path.extname(name)];
+  if (req.method !== 'GET' || !type || !/^[\w.-]+$/.test(name) || name.startsWith('.')) { res.writeHead(404); return res.end('not found'); }
+  fs.readFile(path.join(__dirname, name), (err, data) => {
+    if (err) { res.writeHead(404); return res.end('not found'); }
+    res.writeHead(200, { 'content-type': type, 'cache-control': name === 'index.html' ? 'no-cache' : 'public, max-age=3600' }); res.end(data);
   });
 });
 
@@ -219,11 +221,11 @@ function onMessage(c, data, binary) {
 
 /* ------------------------- relay + housekeeping ------------------------- */
 let tickN = 0; const out = Buffer.alloc(2 + SLOTS * REC);
-setInterval(() => {                                                   // big lobbies: one batched frame per client, 30 or 20 times a second
+setInterval(() => {                                                   // big lobbies: one batched frame per client, 30 times a second
   tickN++;
   for (const r of rooms.values()) {
     if (r.state !== 'play' || r.conns.size <= 8) continue;
-    if (tickN % (r.conns.size <= 24 ? 2 : 3)) continue;
+    if (tickN % 2) continue;
     let n = 0, o = 2; for (let i = 0; i < SLOTS; i++) if (r.has[i] && r.slots[i]) { r.states.copy(out, o, i * REC, i * REC + REC); o += REC; n++; }
     if (!n) continue; out[0] = 1; out[1] = n; const f = frame(2, out.subarray(0, o));
     for (const c of r.conns) rawSend(c, f, true);

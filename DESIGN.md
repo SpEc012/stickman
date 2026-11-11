@@ -1,6 +1,6 @@
 # EMBER BLADES — design doc
 
-A single-file (`index.html`) 2D stickman saber duel. Canvas 2D + WebAudio, no assets, no libraries.
+A single-file (`index.html`) 2D stickman saber fighter, plus `server.js` (lobbies and relay, no dependencies) for online play. Canvas 2D + WebAudio, no assets, no libraries.
 
 ## Architecture
 
@@ -18,6 +18,8 @@ A single-file (`index.html`) 2D stickman saber duel. Canvas 2D + WebAudio, no as
 | **VFX** | Object-pooled sparks, dust, rings, flares, domes, ghosts, pop text, lightning (midpoint displacement), speed lines, embers, rain. |
 | **Renderer** | Cached tileable parallax layers, animated perspective lava floor, wavy additive reflections, heat haze, layered additive blades, saber light pools, thresholded bloom, chromatic pulse, vignette, grain, scanlines. Dynamic quality scaler. |
 | **Audio** | Procedural WebAudio: saber hum (pitch follows swing speed), whoosh, clash, parry chime, lightning crackle, thuds, steps, lava rumble, generative score (drone, taiko, choir pad, ostinato) driven by fight intensity. |
+| **Brawl** | Any number of fighters (cap 50) on wide maps with one-way platforms and pits. Per-fighter targets, per-fighter hit-freeze instead of global hit-stop, deterministic hazard schedule from the match seed, respawns, three rule sets, bot navigation (pit jumping, platform use). |
+| **Network** | WebSocket client for `server.js`: JSON for lobby / roster / events, 18-byte binary records for fighter state. |
 | **UI / Flow** | Title (attract-mode duel) → menu → select → VS card → round intro → fight → KO → results. Pause, options, controls, training tools, F1 debug overlay. |
 
 ## Fighter state machine
@@ -71,3 +73,20 @@ Three clashes in quick succession (or heavy vs heavy) → saber lock (9 s cooldo
 | Grandmaster | 5 | 42 % | 88 % | 0.82 | 1.00 | ×1.12 |
 
 An AI that is standing ready at close range reacts 7 frames sooner (anticipation), and reads the 2nd/3rd hit of a string 4 frames sooner. Parry chance is for heavy moves; lights are parried at 45 % of that rate.
+
+
+## Brawl and netcode
+
+**Ownership.** Every fighter has exactly one owner: a player's client owns that player's fighter; the host's client also owns the bots. An owner runs the full simulation for its fighters. Everyone else sees a *proxy* rebuilt from state records.
+
+**State record (18 bytes, 30 per second per fighter).** slot · x, y (1/8 px) · vx, vy · state · flags (facing, crouch, lightning, grounded, ragdoll, ring-out, invulnerable, alive) · animation id and frame · move id, move frame and a move sequence number · health · target slot · blade length and ultimate variant · alpha. Proxies advance animation and move frames themselves between records and extrapolate position by velocity (up to 6 ticks), easing 45 % of the error per tick.
+
+**Hits are decided by the defender's owner.** Each tick, for every fighter it owns, a client checks every enemy's active hitbox (data-driven boxes from the frame table, using the proxy's move frame; `pst < b && st >= a` so a skipped frame cannot hide an active window; one hit per attacker, move instance and hit index). It applies the outcome locally — hit, block, perfect parry, guard crush, clash, throw, ultimate — and sends a *result event*. Every client plays the effects; the attacker's owner applies the attacker-side consequences (hit confirm, stagger when parried, recoil, focus). Force push, pull and lightning work the same way from the caster's replicated cast frame and target.
+
+Why this way round: blocking and parrying judge exactly what the defending player saw, and nobody is hit by something that missed on their screen. The cost is that the attacker's hit spark arrives one round trip late.
+
+**Server (`server.js`).** Lobbies (code, public list, quick join, host settings, host migration with bot hand-over), slot ownership checks on every record and event, kill counting, match clock, winner. Lobbies of up to 8 forward records immediately; larger ones are batched at 30 Hz. It does not simulate combat, so it is not cheat-proof.
+
+**Ultimates and finishers.** One timeline function per ultimate variant, parameterised by which side(s) the client owns (`oa`, `od`): in a duel both, online one or neither (spectators still get the effects). Finishers are duel-only cinematics entered from the dazed state on match point.
+
+**Crowd rendering.** Fighters outside the view are neither posed nor drawn. With more than 10 (and again more than 22) fighters in view, blade glow layers, light pools, reflections, trail density, name tags and bloom are reduced so additive glow does not wash the screen out and the draw cost stays bounded.

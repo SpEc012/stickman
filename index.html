@@ -3,16 +3,52 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>EMBER BLADES — Stickman Saber Duel</title>
+<title>Ember Blades — Free Stickman Saber Battles Online | stickman.today</title>
+<meta name="description" content="Glowing sabers, ragdoll physics and 50-fighter online brawls. Duel the AI, fight a friend on one keyboard, or open a lobby and share the code. Free, in your browser, no download.">
+<meta name="keywords" content="stickman game, stickman fighting game, stick fight, saber duel, laser sword game, online multiplayer brawl, 50 player battle, browser game, free game, no download, ragdoll physics, local 2 player, fighting game, io game, stickman.today, Ember Blades">
+<meta name="author" content="stickman.today">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#0b0305">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://stickman.today/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ember Blades">
+<!-- link previews: Open Graph (Discord, iMessage, Facebook, LinkedIn…) and X / Twitter -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="stickman.today">
+<meta property="og:url" content="https://stickman.today/">
+<meta property="og:title" content="EMBER BLADES — 50-fighter stickman saber battles">
+<meta property="og:description" content="Glowing sabers. Ragdoll physics. Online lobbies for up to 50. Play free in your browser — no download, no sign-up.">
+<meta property="og:image" content="https://stickman.today/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A white stickman with a blue saber clashes with a hooded black stickman with a red saber in a shower of sparks, in front of an erupting volcano.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EMBER BLADES — 50-fighter stickman saber battles">
+<meta name="twitter:description" content="Glowing sabers. Ragdoll physics. Online lobbies for up to 50. Free in your browser — no download.">
+<meta name="twitter:image" content="https://stickman.today/og.jpg">
+<meta name="twitter:image:alt" content="Two stickmen clash glowing sabers in a shower of sparks in front of an erupting volcano.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoGame","name":"Ember Blades","url":"https://stickman.today/","image":"https://stickman.today/og.jpg","description":"A fast stickman saber fighting game: story duels against five AI masters, local two-player versus, and online brawls for up to 50 fighters with lobbies.","genre":["Fighting","Action","Multiplayer"],"gamePlatform":["Web browser","Desktop","Mobile"],"applicationCategory":"Game","operatingSystem":"Any","playMode":["SinglePlayer","MultiPlayer","CoOp"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":1,"maxValue":50},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
 <style>
   html, body { margin: 0; height: 100%; background: #000; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; overscroll-behavior: none; }
   .fld { position: fixed; display: none; box-sizing: border-box; margin: 0; padding: 0 8px; background: rgba(24,7,6,.92); border: 2px solid #ff7a2a; border-radius: 2px; color: #fff; font: bold 18px 'Arial Narrow', Arial, sans-serif; letter-spacing: 1px; text-align: center; text-transform: uppercase; outline: none; }
   .fld:focus { border-color: #ffe9a8; background: rgba(48,14,10,.96); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   canvas { display: block; width: 100vw; height: 100vh; height: 100dvh; cursor: default; outline: none; -webkit-tap-highlight-color: transparent; }
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
+<canvas id="c" aria-label="Ember Blades game"></canvas>
+<h1 class="sr">Ember Blades — free online stickman saber battles</h1>
+<noscript><p style="color:#fff;font:16px sans-serif;padding:24px">Ember Blades is a stickman saber fighting game with story duels, local versus and online brawls for up to 50 fighters. It needs JavaScript to run — please enable it and reload.</p></noscript>
 <input id="in_name" class="fld" maxlength="14" placeholder="YOUR NAME" autocomplete="off" spellcheck="false">
 <input id="in_code" class="fld" maxlength="4" placeholder="ABCD" autocomplete="off" spellcheck="false">
 <input id="in_srv" class="fld" maxlength="120" placeholder="wss://your-server" autocomplete="off" spellcheck="false" style="text-transform:none">
@@ -51,6 +87,9 @@ const EZ = {
 };
 
 // Persistent settings / unlocks (never throws)
+// Online play: where server.js runs, e.g. 'wss://play.example.com'. Leave empty when server.js itself serves this page.
+// Players can also override it on the online screen or with ?server=wss://… in the address.
+const SERVER_URL = '';
 const SAVE_KEY = 'emberblades.v1';
 const SET = { vol: 0.7, mute: false, quality: 'auto', scan: false, shake: true, touch: 'auto', unlocks: 0, bestStory: 0, fps: 0, res: 100, showFps: false, name: '', server: '' };   // fps: 0 = vsync, -1 = uncapped
 function loadSave() { try { const o = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); for (const k in SET) if (typeof o[k] === typeof SET[k]) SET[k] = o[k]; } catch (e) { /* storage unavailable */ } }
@@ -1256,8 +1295,8 @@ const G = {
   ultHit(U, dmg, big) {
     const A = U.a, D = U.d, y = D.y - 92;
     if (U.od) { this.damage(D, dmg); if (D.hp < 1 && !big) D.hp = 1; D.shake = 8; D.lastHitBy = A.id; D.hitT = this.simT; }
-    FX.hitFx(D.x, y, A.face, true, sparkCol(A), A.ch.col.rgb); AU.hit(true);
-    if (U.cine) { this.hitstop = big ? 12 : 4; CAM.shake(big ? .9 : .45); CAM.kick(big ? .1 : .05, A.face * .03); } else CAM.shake(big ? .5 : .2);
+    FX.hitFx(D.x, y, A.face, big || dmg > 4, sparkCol(A), A.ch.col.rgb); AU.hit(big || dmg > 4);
+    if (U.cine) { this.hitstop = big ? 12 : dmg > 4 ? 4 : 2; CAM.shake(big ? .9 : .45); CAM.kick(big ? .1 : .05, A.face * .03); } else CAM.shake(big ? .5 : .2);
     if (big) { FX.flash = Math.max(FX.flash, U.cine ? .55 : .15); FX.flashCol = '255,255,255'; FX.flare(D.x, y, 220, '255,245,230', 20); FX.ring(D.x, y, 20, 18, A.ch.col.rgb, 26, 6); AU.clash(true); if (U.cine) { this.slow(.25, .6); CAM.release(); } }
   },
   ultStep(U) {
@@ -1636,7 +1675,7 @@ const ANIM_LIST = Object.keys(ANIM).map((k, i) => { ANIM[k].id = i; return ANIM[
 const MOVE_LIST = [null].concat(Object.keys(MOVES).map((k, i) => { MOVES[k].nid = i + 1; return MOVES[k]; }));
 // how much of an event at world x reaches the local camera (1 on screen, 0 far away); duels always 1
 function camNear(x) { return BR.on ? clamp(1.5 - Math.abs(x - CAM.x) * CAM.zoom / (VW * .62), 0, 1) : 1; }
-function mkCh(look, colKey) { const base = CHARS[look % CHARS.length], col = COL[colKey] || base.col; return Object.assign({}, base, { col, zap: col }); }
+function mkCh(look, colKey, team) { const base = CHARS[look % CHARS.length], col = COL[colKey] || base.col, ch = Object.assign({}, base, { col, zap: col }); if (team && !base.dark) { ch.body = team === 1 ? '#d6e6ff' : '#ffd6d9'; ch.back = team === 1 ? '#93acd6' : '#d6979c'; } return ch; }   // team battles tint the pale fighters
 const BR = {
   on: false, online: false, list: [], slot: new Array(MAX_F).fill(null), pool: [], made: 0, me: null, set: { map: 1, mode: 0, time: 2, fill: 5, tier: 2 }, map: MAPS[1],
   phase: 'intro', t: 0, seed: 1, kills: new Int16Array(MAX_F), deaths: new Int16Array(MAX_F), feed: [], ults: [], nullT: null, camB: { rx: 0, ry: 0, vx: 0 }, endInfo: null, spec: null,
@@ -1666,7 +1705,7 @@ const BR = {
     const f = this.pool.pop() || new Fighter(2 + this.made++);
     f.id = r.slot; f.own = !!r.own; f.bot = !!r.bot; f.human = !!r.me; f.name = r.name; f.team = this.set.mode === 1 ? (r.team || 1) : 0; f.look = r.look | 0; f.colKey = r.col;
     f.pad = r.me ? pads[0] : (f.botPad || (f.botPad = new Pad())); f.pad.clear();
-    const ch = r.me && this.set.mode !== 1 ? CHARS[r.look % CHARS.length] : mkCh(r.look, this.set.mode === 1 ? (f.team === 1 ? 'blue' : 'red') : r.col);
+    const ch = r.me && this.set.mode !== 1 ? CHARS[r.look % CHARS.length] : mkCh(r.look, this.set.mode === 1 ? (f.team === 1 ? 'blue' : 'red') : r.col, f.team);
     const x = this.spawnX(f, true); f.reset(x, x > 0 ? -1 : 1, ch); f.wins = 0;
     f.ai = f.bot && f.own ? new AI(f, clamp(this.set.tier + (r.slot * 7) % 3 - 1, 0, 4), null) : null;
     f.alive = true; f.deadT = 0; f.nx = f.x; f.ny = f.y; f.nvx = f.nvy = 0; f.age = 0; f.ngr = 1; f.tgt = null; f.tgtId = 255; f.thrT = 0; f.far = false;
@@ -1962,7 +2001,7 @@ const BR = {
    as JSON; fighter records as binary. See BR for who simulates what.        */
 const NET = {
   ws: null, on: false, id: 0, room: null, host: false, ping: 0, lobbies: [], status: '', err: '', errT: -1e9, pingT: 0, listT: 0, want: null, url: '',
-  defaultUrl() { const q = URLQ.get('server'); if (q) return q; if (SET.server) return SET.server; if (location.protocol === 'http:' || location.protocol === 'https:') return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host; return 'ws://localhost:8080'; },
+  defaultUrl() { const q = URLQ.get('server'); if (q) return q; if (SET.server) return SET.server; if (SERVER_URL) return SERVER_URL; if (location.protocol === 'http:' || location.protocol === 'https:') return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host; return 'ws://localhost:8080'; },
   connect(url) {
     if (this.ws) { const old = this.ws; this.ws = null; try { old.close(); } catch (e) { /* already closed */ } }
     this.on = false; this.room = null; this.status = 'CONNECTING…'; this.err = ''; this.url = url;
@@ -1970,7 +2009,7 @@ const NET = {
     ws.binaryType = 'arraybuffer'; this.ws = ws;
     ws.onopen = () => { if (this.ws !== ws) return; this.on = true; this.status = ''; this.hello(); this.send({ t: 'list' }); if (this.want) { this.send(this.want); this.want = null; } };
     ws.onmessage = e => { if (this.ws !== ws) return; if (typeof e.data === 'string') { let m; try { m = JSON.parse(e.data); } catch (x) { return; } this.msg(m); } else if (BR.on && BR.online) BR.recvStates(new DataView(e.data)); };
-    ws.onclose = () => { if (this.ws !== ws) return; const was = this.on; this.on = false; this.ws = null; this.status = ''; this.fail(was ? 'Connection to the server was lost.' : 'Could not reach the server at ' + url); this.room = null; if (BR.online && BR.on) { G.startMatch('attract'); UI.go('online'); } else if (UI.screen === 'lobby' || UI.screen === 'bres') UI.go('online'); };
+    ws.onclose = () => { if (this.ws !== ws) return; const was = this.on; this.on = false; this.ws = null; this.status = ''; this.fail(was ? 'Connection to the server was lost.' : 'No game server answered at ' + url.replace(/^wss?:\/\//, '') + ' — type its address in SERVER below, then RECONNECT.'); this.room = null; if (BR.online && BR.on) { G.startMatch('attract'); UI.go('online'); } else if (UI.screen === 'lobby' || UI.screen === 'bres') UI.go('online'); };
   },
   fail(msg) { this.err = msg; this.errT = performance.now(); },
   hello() { this.send({ t: 'hello', name: SET.name, look: G.p1, col: COLKEYS[G.p1] || 'blue' }); },
@@ -2117,8 +2156,8 @@ function buildArena(A) {
     { c: silLayer(A, A.cols[2], 37, 340, 40, temple ? 300 : 260, temple ? 'pillar' : 'spire'), p: .45, off: 12 }
   ];
   if (A.cols[3]) A.layers.push({ c: silLayer(A, A.cols[3], 53, 300, 20, temple ? 280 : 180, temple ? 'pillar' : 'spire'), p: .7, off: 20 });
-  A.volc = temple ? null : makeVolcano(A, A.bridge ? 71 : 31); A.volcX = A.bridge ? 420 : -330;
-  A.falls = []; const RF = lcg(77 + A.key.length); if (!temple) for (let i = 0; i < 7; i++) A.falls.push({ x: RF() * TW, h: 50 + RF() * 110, l: 1 + ((RF() * 2) | 0), ph: RF() * 6 });
+  A.volc = temple || A.key === 'frost' ? null : makeVolcano(A, A.bridge ? 71 : 31); A.volcX = A.bridge ? 420 : -330;
+  A.falls = []; const RF = lcg(77 + A.key.length); if (!temple && A.key !== 'frost') for (let i = 0; i < 7; i++) A.falls.push({ x: RF() * TW, h: 50 + RF() * 110, l: 1 + ((RF() * 2) | 0), ph: RF() * 6 });
   A.rocks = []; A.rockC = [makeRock(A.rock, 3), makeRock(A.rock, 8), makeRock(A.rock, 15)];
   if (!A.bridge) { const RR = lcg(91), ext = STAGE_W + 500; for (let x = -ext, i = 0; x < ext; x += 300, i++) A.rocks.push({ x: x + RR() * 160, p: .62 + RR() * .3, s: .45 + RR() * .5, v: i % 3 }); for (let x = -ext + 150, i = 0; x < ext; x += 700, i++) A.rocks.push({ x: x + RR() * 200, p: 2.5 + RR() * .7, s: .5 + RR() * .25, v: i % 3 }); A.rocks.sort((a, b) => a.p - b.p); }
   A.streaks = []; const RS = lcg(1234); for (let i = 0; i < (temple ? 46 : 84); i++) A.streaks.push({ d: .015 + Math.pow(RS(), 1.7) * .98, x: RS() * 4000, len: 30 + RS() * 90, drift: (RS() - .3) * (temple ? 2 : 14), ph: RS() * TAU });
@@ -2135,7 +2174,7 @@ function makeBuffers() {
 }
 resizeHooks.push(makeBuffers); resizeHooks.push(() => { if (G.arena) buildArena(G.arena); });
 
-let TIME = 0;
+let TIME = 0, LOD = 0;   // LOD: 0 = full detail, 1 = more than 10 fighters in view, 2 = more than 22
 function drawBack(A, yg, yh, z, T) {
   const c = ctx;
   c.drawImage(A.sky, -100, -80, VW + 200, yh + 92);
@@ -2221,7 +2260,7 @@ function drawPlats(c, A) {
   for (const p of G.plats) {
     if (p[1] < CAM.x - hv || p[0] > CAM.x + hv) continue; const x0 = p[0], x1 = p[1], y = p[2], w = x1 - x0, n = Math.max(3, Math.round(w / 44));
     c.fillStyle = A.rock; c.beginPath(); c.moveTo(x0 - 8, y); c.lineTo(x1 + 8, y); c.lineTo(x1 - 2, y + 11);
-    for (let i = n - 1; i >= 1; i--) { const u = i / n, hs = Math.abs(Math.sin((x0 + i * 37.7) * 12.9898)); c.lineTo(x0 + w * u, y + 14 + hs * 24 * Math.sin(u * PI) + 6 * Math.sin(u * PI)); }
+    for (let i = n - 1; i >= 1; i--) { const u = i / n, hs = Math.abs(Math.sin((x0 + i * 37.7) * 12.9898)); c.lineTo(x0 + w * u, y + 16 + hs * 26 * Math.sin(u * PI) + 22 * Math.sin(u * PI)); }
     c.lineTo(x0 + 2, y + 11); c.closePath(); c.fill();
     c.globalCompositeOperation = 'lighter'; c.fillStyle = A.rockLine; c.fillRect(x0 - 8, y - 1.2, w + 16, 2.2); c.fillStyle = A.rim; c.fillRect(x0 + 6, y + 3, w - 12, 1); drawGlow(c, A.glow, (x0 + x1) / 2, y + 2, w * .55, .16, .08); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   }
@@ -2231,7 +2270,7 @@ function drawTags(c) {
   for (const f of G.f) {
     if (!f.vis || !f.alive || f.alpha < .5 || f.state === ST.INTRO) continue; const x = f.rx, y = f.ry - 188, mine = f === me;
     c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(x - 25, y + 9, 50, 5); c.fillStyle = f.team ? (f.team === 1 ? '#5aa2ff' : '#ff5a66') : (mine ? '#ffd24a' : '#e8e8ee'); c.fillRect(x - 24, y + 10, 48 * clamp(f.hp / 100, 0, 1), 3);
-    txt(mine ? 'YOU' : f.name, x, y, 14, mine ? '#ffe9a8' : f.ch.col.pale, 'center', null, .92);
+    if (!LOD || mine || (me && me.tgt === f)) txt(mine ? 'YOU' : f.name, x, y, 14, mine ? '#ffe9a8' : f.ch.col.pale, 'center', null, .92);
     if (f.invuln > 20) { c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 2; c.beginPath(); c.arc(x, f.ry - 80, 92, 0, TAU); c.stroke(); }
   }
 }
@@ -2284,7 +2323,7 @@ function drawFighter(c, f, al, A) {
 const NODASH = [];
 function bladeStroke(c, x1, y1, x2, y2, col, k, fl) {
   c.lineCap = 'round'; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2);
-  c.globalAlpha = k; c.strokeStyle = col.g1; c.lineWidth = 44 * fl; c.stroke(); c.strokeStyle = col.g2; c.lineWidth = 27 * fl; c.stroke(); c.strokeStyle = col.g3; c.lineWidth = 15 * fl; c.stroke();
+  c.globalAlpha = k; if (LOD < 1) { c.strokeStyle = col.g1; c.lineWidth = 44 * fl; c.stroke(); } if (LOD < 2) { c.strokeStyle = col.g2; c.lineWidth = 27 * fl; c.stroke(); } c.strokeStyle = col.g3; c.lineWidth = (LOD ? 13 : 15) * fl; c.stroke();
   c.strokeStyle = col.light; c.lineWidth = 8; c.stroke(); c.strokeStyle = '#fff'; c.lineWidth = 3.8; c.stroke(); c.globalAlpha = 1;
 }
 for (const k in COL) { const c = COL[k]; c.g1 = `rgba(${c.rgb},.075)`; c.g2 = `rgba(${c.rgb},.15)`; c.g3 = `rgba(${c.rgb},.42)`; c.tr = `rgba(${c.rgb},1)`; }
@@ -2294,17 +2333,17 @@ function drawBlade(c, f) {
   bladeStroke(c, J[J_BB * 2], J[J_BB * 2 + 1], J[J_BT * 2], J[J_BT * 2 + 1], col, on, fl);
   if (f.ch.double) bladeStroke(c, J[J_HE * 2], J[J_HE * 2 + 1], J[J_B2 * 2], J[J_B2 * 2 + 1], col, on, fl);
   const mx = (J[J_BB * 2] + J[J_BT * 2]) / 2, my = (J[J_BB * 2 + 1] + J[J_BT * 2 + 1]) / 2;
-  drawGlow(c, col.rgb, mx, my, 150 + f.glow * 80, (.3 + f.glow * .3) * on); drawGlow(c, col.rgb, J[J_BB * 2], J[J_BB * 2 + 1], 16, on);
+  if (LOD < 2) drawGlow(c, col.rgb, mx, my, 150 + f.glow * 80, (.3 + f.glow * .3) * on * (LOD ? .35 : 1)); drawGlow(c, col.rgb, J[J_BB * 2], J[J_BB * 2 + 1], 16, on);
   c.globalAlpha = 1;
 }
 function drawTrail(c, f, rt) {
-  const col = f.ch.col, J = f.RJ, LIFE = 9; c.fillStyle = col.tr; c.strokeStyle = col.light; c.lineWidth = 2.6; c.lineCap = 'round';
+  const col = f.ch.col, J = f.RJ, LIFE = 9, step = LOD + 1, dim = LOD ? .6 : 1; c.fillStyle = col.tr; c.strokeStyle = col.light; c.lineWidth = 2.6; c.lineCap = 'round';
   for (let pass = 0; pass < (f.ch.double ? 2 : 1); pass++) {
     let pbx = pass ? J[J_HE * 2] : J[J_BB * 2], pby = pass ? J[J_HE * 2 + 1] : J[J_BB * 2 + 1], ptx = pass ? J[J_B2 * 2] : J[J_BT * 2], pty = pass ? J[J_B2 * 2 + 1] : J[J_BT * 2 + 1], first = true;
-    for (let n = 0; n < TN - 1; n++) {
+    for (let n = 0; n < TN - 1; n += step) {
       const k = (f.th - n + TN * 2) % TN, t = f.tt[k]; if (t > rt + .001) continue; const age = rt - t; if (age > LIFE) break;
       const bx = f.tbx[k], by = f.tby[k], tx = pass ? f.t2x[k] : f.ttx[k], ty = pass ? f.t2y[k] : f.tty[k];
-      const u = 1 - age / LIFE, a = f.ts[k] * u * Math.sqrt(u) * f.alpha;
+      const u = 1 - age / LIFE, a = f.ts[k] * u * Math.sqrt(u) * f.alpha * dim;
       if (a > .015 && Math.abs(tx - ptx) + Math.abs(ty - pty) < 260) {
         const qx = lerp(pbx, ptx, .22), qy = lerp(pby, pty, .22), rx = lerp(bx, tx, .22), ry = lerp(by, ty, .22);
         c.globalAlpha = a * .46; c.beginPath(); c.moveTo(qx, qy); c.lineTo(ptx, pty); c.lineTo(tx, ty); c.lineTo(rx, ry); c.closePath(); c.fill();
@@ -2354,7 +2393,7 @@ function drawReflection(A, yg, z, al, T) {
   rc.setTransform(k * z, 0, 0, -k * z * .66, k * (VW / 2 - CAM.x * z), 0);
   rc.lineCap = 'round'; rc.lineJoin = 'round';
   for (const f of G.f) {
-    if (!f.vis || f.ringOut || f.y < -110) continue; const J = f.RJ, ch = f.ch;
+    if (!f.vis || f.ringOut || f.y < -110 || (LOD && f !== BR.me && f !== (BR.me && BR.me.tgt))) continue; const J = f.RJ, ch = f.ch;
     if (!ch.dark) { rc.globalAlpha = .55 * f.alpha; rc.strokeStyle = ch.back; rc.lineWidth = ch.w; rc.beginPath(); stickBack(rc, J); stickFront(rc, J); rc.stroke(); rc.fillStyle = ch.back; rc.beginPath(); rc.arc(J[4], J[5], ch.headR, 0, TAU); rc.fill(); }
     const on = f.bladeOn * f.alpha; if (on > .02) { rc.globalCompositeOperation = 'lighter'; bladeStroke(rc, J[J_BB * 2], J[J_BB * 2 + 1], J[J_BT * 2], J[J_BT * 2 + 1], ch.col, on, 1.2); if (ch.double) bladeStroke(rc, J[J_HE * 2], J[J_HE * 2 + 1], J[J_B2 * 2], J[J_B2 * 2 + 1], ch.col, on, 1.2); rc.globalCompositeOperation = 'source-over'; }
   }
@@ -2406,9 +2445,10 @@ function renderScene(al, dt, simDt) {
   const A = G.arena, F = G.f, c = ctx, brawl = BR.on; if (G.frozen) al = 1;
   TIME += simDt;
   // only fighters near the view are posed and drawn
-  const hv = VW / 2 / CAM.zoom + 340; let ca = brawl ? BR.camA() : F[0], cb = F[1] || F[0];
+  const hv = VW / 2 / CAM.zoom + 210; let ca = brawl ? BR.camA() : F[0], cb = F[1] || F[0], nv = 0;
   if (!ca) ca = cb = BR.nullT;
-  for (let i = 0; i < F.length; i++) { const f = F[i]; f.vis = f === ca || Math.abs(f.x - CAM.x) < hv; if (f.vis) f.renderJoints(al); else { f.rx = f.x; f.ry = f.y; } }
+  for (let i = 0; i < F.length; i++) { const f = F[i]; f.vis = f === ca || Math.abs(f.x - CAM.x) < hv; if (f.vis) { f.renderJoints(al); nv++; } else { f.rx = f.x; f.ry = f.y; } }
+  LOD = nv > 22 ? 2 : nv > 10 ? 1 : 0;
   if (brawl) { BR.camUpdate(ca); cb = BR.camB; }
   const a = F[0], b = F[1] || F[0];
   CAM.update(dt, ca, cb, STAGE_W);
@@ -2425,7 +2465,7 @@ function renderScene(al, dt, simDt) {
   drawHazards(c, A);
   // saber light pooled on the floor
   c.globalCompositeOperation = 'lighter';
-  for (const f of F) { const J = f.RJ, on = f.bladeOn * f.alpha; if (!f.vis || on < .02 || f.ringOut || f.flr > 1e8) continue; const mx = (J[J_BB * 2] + J[J_BT * 2]) / 2, my = (J[J_BB * 2 + 1] + J[J_BT * 2 + 1]) / 2, hgt = clamp(1 - (f.flr - my) / 260, .25, 1); drawGlow(c, f.ch.col.rgb, mx, f.flr + 6, 210, .42 * on * hgt, .2); drawGlow(c, f.ch.col.rgb, mx, f.flr + 3, 90, .5 * on * hgt, .16); }
+  for (const f of F) { const J = f.RJ, on = f.bladeOn * f.alpha; if (!f.vis || on < .02 || f.ringOut || f.flr > 1e8 || (LOD > 1 && f !== ca)) continue; const mx = (J[J_BB * 2] + J[J_BT * 2]) / 2, my = (J[J_BB * 2 + 1] + J[J_BT * 2 + 1]) / 2, hgt = clamp(1 - (f.flr - my) / 260, .25, 1); drawGlow(c, f.ch.col.rgb, mx, f.flr + 6, 210, .42 * on * hgt * (LOD ? .4 : 1), .2); if (!LOD) drawGlow(c, f.ch.col.rgb, mx, f.flr + 3, 90, .5 * on * hgt, .16); }
   if (G.lock) { const x = G.lock.mid + G.lock.m * 34; drawGlow(c, '255,200,140', x, 4, 260, .5 + .2 * Math.sin(T * 30), .2); }
   c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   drawDust(c); drawGhosts(c);
@@ -2447,7 +2487,7 @@ function renderScene(al, dt, simDt) {
     B0X.globalCompositeOperation = 'copy'; B0X.drawImage(BL1, 0, 0); B1X.globalCompositeOperation = 'multiply'; B1X.drawImage(BL0, 0, 0);
     B2X.globalCompositeOperation = 'copy'; B2X.drawImage(BL1, 0, 0, BL2.width, BL2.height);
     B1X.globalCompositeOperation = 'lighter'; B1X.globalAlpha = .85; B1X.drawImage(BL2, 0, 0, BL1.width, BL1.height); B1X.globalAlpha = 1;
-    c.globalCompositeOperation = 'lighter'; c.globalAlpha = .46; c.drawImage(BL1, 0, 0, W, Hh); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+    c.globalCompositeOperation = 'lighter'; c.globalAlpha = LOD ? .26 : .46; c.drawImage(BL1, 0, 0, W, Hh); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   }
   if (FX.chroma > .02 && Q.cur < 3) {
     const off = FX.chroma * 4 * S;
@@ -2647,12 +2687,12 @@ const UI = {
     c.globalCompositeOperation = 'lighter'; const w = 470 * s;
     c.fillStyle = 'rgba(60,140,255,.9)'; c.fillRect(VW / 2 - w, y + 70 * s, w - 8, 3); c.fillStyle = 'rgba(255,40,50,.9)'; c.fillRect(VW / 2 + 8, y + 70 * s, w - 8, 3);
     drawGlow(c, '60,140,255', VW / 2 - w / 2, y + 71 * s, w * .6, .5, .06); drawGlow(c, '255,40,50', VW / 2 + w / 2, y + 71 * s, w * .6, .5, .06); drawGlow(c, '255,255,255', VW / 2, y + 71 * s, 26, 1); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
-    txt('S T I C K M A N   S A B E R   D U E L', VW / 2, y + 100 * s, 24 * s, '#ffcf9a');
+    txt('S T I C K M A N   S A B E R   B A T T L E S', VW / 2, y + 100 * s, 24 * s, '#ffcf9a');
   },
   title() {
     this.logo(VH * .34, 1);
     if (Math.sin(this.t * 4) > -.3) txt(touchSeen ? 'TAP TO START' : 'PRESS ENTER', VW / 2, VH * .7, 34, '#fff', 'center', 'rgba(255,120,40,.9)');
-    txt('KEYBOARD · GAMEPAD · TOUCH', VW / 2, VH - 30, 15, '#a08a80');
+    txt('STICKMAN.TODAY', VW / 2, VH - 52, 18, '#ffcf9a', 'center', 'rgba(255,120,40,.7)'); txt('KEYBOARD · GAMEPAD · TOUCH · ONLINE', VW / 2, VH - 28, 14, '#a08a80');
   },
   select() {
     const c = ctx, st = this.step, mode = this.mode, two = mode === 'versus' || mode === 'training';
