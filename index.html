@@ -410,13 +410,13 @@ const hb = (a, b, x, y, w, h, dmg, o) => Object.assign({ a, b, x, y, w, h, dmg, 
 const MOVES = {
   L1: { name: 'Light 1', anim: 'l1', total: 22, hits: [hb(7, 9, 6, -128, 120, 104, 6, { hs: 17, bs: 11, kx: 3.2, gd: 7 })], lunge: [[3, 5.5]], can: { from: 9, to: 19, light: 'L2' }, sw: [5, .3], sp: true },
   L2: { name: 'Light 2', anim: 'l2', total: 25, hits: [hb(8, 10, 6, -138, 124, 130, 7, { hs: 18, bs: 12, kx: 3.6, gd: 8 })], lunge: [[3, 5.5]], can: { from: 10, to: 21, light: 'L3' }, sw: [6, .4], sp: true },
-  L3: { name: 'Light 3', anim: 'l3', total: 36, hits: [hb(10, 13, 8, -155, 134, 155, 10, { hs: 24, bs: 15, kx: 9, gd: 12, stop: 6, type: 'knock' })], lunge: [[5, 7.5]], sw: [8, .7], sp: true },
-  H1: { name: 'Heavy overhead', anim: 'h1', total: 46, hits: [hb(17, 20, 8, -168, 132, 168, 16, { hs: 28, bs: 20, kx: 6, gd: 24, stop: 8, lvl: 'high', heavy: true })], lunge: [[13, 6.5]], can: { from: 19, to: 34, heavy: 'H2', onHit: true }, sw: [15, 1], sp: true },
+  L3: { name: 'Light 3', anim: 'l3', total: 36, hits: [hb(10, 13, 8, -155, 134, 155, 10, { hs: 24, bs: 15, kx: 9.5, ky: -7, gd: 12, stop: 6, type: 'launch' })], lunge: [[5, 7.5]], sw: [8, .7], sp: true },
+  H1: { name: 'Heavy overhead', anim: 'h1', total: 46, hits: [hb(17, 20, 8, -168, 132, 168, 16, { hs: 28, bs: 20, kx: 3.6, ky: -10.5, gd: 24, stop: 8, lvl: 'high', heavy: true, type: 'slam' })], lunge: [[13, 6.5]], can: { from: 19, to: 34, heavy: 'H2', onHit: true }, sw: [15, 1], sp: true },
   H2: { name: 'Rising launcher', anim: 'h2', total: 44, hits: [hb(14, 17, 2, -180, 100, 180, 13, { bs: 18, kx: 3.2, ky: -14.5, gd: 16, stop: 8, type: 'launch', heavy: true })], lunge: [[10, 4.5]], sw: [13, .9], sp: true },
   SWEEP: { name: 'Low sweep', anim: 'sweep', total: 32, hits: [hb(10, 13, 8, -42, 124, 42, 8, { bs: 12, kx: 2.5, ky: -7, gd: 8, stop: 5, type: 'trip', lvl: 'low' })], lunge: [[6, 5]], sw: [8, .5] },
   AIRL: { name: 'Air slash', anim: 'airl', total: 30, air: true, hits: [hb(8, 14, 0, -125, 104, 150, 9, { hs: 20, bs: 13, kx: 4, gd: 8, lvl: 'high' })], sw: [6, .5] },
   AIRH: { name: 'Somersault slash', anim: 'airh', total: 40, air: true, hits: [hb(11, 24, -30, -150, 140, 190, 13, { hs: 24, bs: 16, kx: 5.5, gd: 14, stop: 7, lvl: 'high', heavy: true })], sw: [8, 1] },
-  DASHATK: { name: 'Dash attack', anim: 'dashatk', total: 34, hits: [hb(9, 13, 6, -128, 128, 104, 12, { hs: 24, bs: 16, kx: 9, gd: 14, stop: 6, type: 'knock' })], lunge: [[1, 12], [9, 9]], sw: [7, .8], ghost: true },
+  DASHATK: { name: 'Dash attack', anim: 'dashatk', total: 34, hits: [hb(9, 13, 6, -128, 128, 104, 12, { hs: 24, bs: 16, kx: 10.5, ky: -6.5, gd: 14, stop: 6, type: 'launch' })], lunge: [[1, 12], [9, 9]], sw: [7, .8], ghost: true },
   THROW: { name: 'Throw', anim: 'throw', total: 30, hits: [hb(6, 7, 6, -122, 64, 122, 12, { ub: true, type: 'throw' })] },
   GB: { name: 'Guard break', anim: 'gb', total: 52, hits: [hb(23, 26, 6, -135, 124, 115, 10, { hs: 30, kx: 8, gd: 200, stop: 9, ub: true, type: 'knock', heavy: true, crush: true })], lunge: [[20, 7]], sw: [21, 1], focus: 35, glow: true },
   PUSH: { name: 'Force push', anim: 'push', total: 34, cast: 'push', at: 11, force: 30 },
@@ -670,7 +670,7 @@ class Fighter {
     this.stun = 0; this.invuln = 0; this.parryT = 0; this.parryLock = 0; this.crouching = false; this.lag = 0; this.airUsed = false; this.airDash = false;
     this.walkPh = this.pWalkPh = 0; this.walkAmt = this.pWalkAmt = 0; this.land = this.pLand = 0; this.rec = this.pRec = 0; this.bladeOn = 1; this.pBlade = 1;
     this.rag = false; this.ragBlade = 0; this.ragBladeV = 0; this.getupB = 0; this.bounced = false; this.juggle = 0; this.gravMul = 1; this.combo = 0; this.comboDmg = 0; this.comboT = 0;
-    this.shake = 0; this.flashT = 0; this.tipSpd = 0; this.zapEnd = 0; this.zapping = false; this.alpha = 1; this.glow = 0; this.wins = this.wins || 0; this.lastHitBy = 0; this.wallHits = 0; this.ringOut = false;
+    this.shake = 0; this.flashT = 0; this.tipSpd = 0; this.zapEnd = 0; this.zapping = false; this.alpha = 1; this.boltRef = null; this.glow = 0; this.wins = this.wins || 0; this.lastHitBy = 0; this.wallHits = 0; this.ringOut = false;
     sampleAnim(this.anim, 0, this.pose); this.from.set(this.pose); solve(this.pose, this.x, this.y, this.face, this.J, ch, 1); this.RJ.set(this.J);
     for (let k = 0; k < TN; k++) { this.tt[k] = -999; this.ts[k] = 0; }
     for (let k = 0; k < CN; k++) { this.cx[k] = this.cox[k] = this.J[J_NECK * 2] - face * k * 3; this.cy[k] = this.coy[k] = this.J[J_NECK * 2 + 1] + k * 11; }
@@ -868,7 +868,7 @@ class Fighter {
         break;
       case ST.GETUP: this.vx *= st <= 14 ? .95 : .8; this.getupB = Math.max(0, this.getupB - .075); if (st >= 26) { this.getupB = 0; this.toStand(); } break;
       case ST.WIN: this.vx *= .8; this.setAnim('win', 8); break;
-      case ST.DEAD: this.vx *= .85; this.bladeOn = Math.max(0, this.bladeOn - .03); break;
+      case ST.DEAD: this.vx *= .85; this.bladeOn = Math.max(0, this.bladeOn - .03); if (this.ringOut) this.alpha = Math.max(0, this.alpha - .05); break;
       case ST.LOCK: case ST.ULT: case ST.ULTV: case ST.THROWN: break;
     }
     this.walkAmt += (wa - this.walkAmt) * .22;
@@ -880,7 +880,7 @@ class Fighter {
         this.vy += GRAV * (s === ST.LAUNCH ? this.gravMul : 1); this.y += this.vy;
         if (this.y >= 0 && G.hasFloor(this.x) && this.vy >= 0) this.onGround(G);
         else if (this.y > 330 && !this.ringOut) { this.ringOut = true; G.onRingOut(this); }
-        if (this.y > 800) { this.y = 800; this.vy = 0; this.vx = 0; }
+        if (this.ringOut && this.y > 430) { this.y = 430; this.vy = 0; this.vx = 0; }
       } else if (s === ST.HIT || s === ST.DEAD) this.vx *= .98;
       // stage bounds: wall bounce for launched bodies
       const open = s === ST.LAUNCH || s === ST.DEAD || this.ringOut, L = G.wallL(open), R = G.wallR(open);
@@ -1074,13 +1074,13 @@ const G = {
     const dir = D.x !== A.x ? sign(D.x - A.x) : A.face;
     FX.hitFx(x, y, dir, !!h.heavy, sparkCol(A), A.ch.col.rgb); AU.hit(!!h.heavy); this.intensity = Math.min(1, this.intensity + .12);
     FX.pop(String(Math.max(1, Math.round(dmg))), x + dir * 26, y - 34, h.heavy ? '#ffd76a' : '#fff', h.heavy ? 22 : 16);
-    if (A.combo > 1) FX.pop(A.combo + ' HITS', A.x, A.y - 200, '#ffe9a8', 20 + Math.min(A.combo, 6) * 2, '255,150,40');
     if (h.type === 'ult' && D.hp > 0) { this.startUlt(A, D); return; }
-    if (D.hp <= 0) { D.juggle = 0; D.launch(dir * Math.max(7, h.kx * 1.2), Math.min(-10, h.ky - 7), dir * .03); return; }
-    if (air || h.type === 'launch' || h.type === 'trip') {
+    if (D.hp <= 0) { D.juggle = 0; D.launch(dir * Math.max(8, h.kx * 1.25), Math.min(-11, h.ky - 7), dir * .1); return; }
+    if (air || h.type === 'launch' || h.type === 'trip' || h.type === 'slam') {
       if (air) { D.juggle++; if (D.juggle >= 4) D.invuln = 70; }
-      const lt = h.type === 'launch' || h.type === 'trip';
-      D.launch(dir * (lt ? h.kx : h.kx * .7 + 1.5), lt ? h.ky : -8.5, dir * (h.type === 'trip' ? -.03 : .025));
+      const lt = h.type !== 'stun' && h.type !== 'knock';
+      if (h.type === 'slam' && !air) { FX.ring(D.x, D.y, 16, 11, '255,210,170', 18, 3, .26); FX.dust(D.x, D.y, 10, dir * 3, this.arena.dust); }   // overhead: smashed into the floor, bounces up
+      D.launch(dir * (lt ? h.kx : h.kx * .7 + 1.5), lt ? h.ky : -8.5, dir * (h.type === 'trip' ? -.07 : .06 + rnd() * .04));
     } else {
       const back = (A.x - D.x) * D.face < 0;
       D.hitstun(h.hs, back ? 'hitB' : (h.lvl === 'high' || y > D.y - 70) ? 'hitM' : 'hitH'); D.vx = dir * h.kx;
@@ -1097,7 +1097,7 @@ const G = {
     if (A.state !== ST.ATK || A.move !== MOVES.THROWHIT) { if (D.state === ST.THROWN) D.toStand(); this.thr = null; return; }
     if (T.t < 13) { D.x += (A.x + A.face * 44 - D.x) * .4; D.ox = D.x; }
     if (T.t === 11) AU.swing(.8);
-    if (T.t === 13) { this.damage(D, 12); A.focus = Math.min(100, A.focus + 10); D.lastHitBy = A.i; this.hitstop = 7; CAM.shake(.4); FX.hitFx(D.x, D.y - 95, A.face, true, sparkCol(A), A.ch.col.rgb); AU.hit(true); D.launch(A.face * 9, -10.5, A.face * .03); this.thr = null; }
+    if (T.t === 13) { this.damage(D, 12); A.focus = Math.min(100, A.focus + 10); D.lastHitBy = A.i; this.hitstop = 7; CAM.shake(.4); FX.hitFx(D.x, D.y - 95, A.face, true, sparkCol(A), A.ch.col.rgb); AU.hit(true); D.launch(A.face * 9, -10.5, A.face * .1); this.thr = null; }
   },
   // ---- force powers (called from Fighter.update while the cast move runs)
   castTick(f, o, st) {
@@ -1109,7 +1109,7 @@ const G = {
         AU.push(); CAM.shake(.3); CAM.kick(.04, f.face * .015);
         if (dx > -30 && dx < 340 && Math.abs(o.y - f.y) < 160 && o.hurtable()) {
           if (o.state === ST.BLOCK && facing) { o.vx = f.face * 13; o.guard -= 12; o.stun = 16; o.rec = 1; FX.dome(o.x + o.face * 12, o.y - 95, o.face, o.ch.col.rgb); AU.block(); if (o.guard <= 0) this.guardCrush(o); }
-          else { this.damage(o, 7); f.focus = Math.min(100, f.focus + 7); o.lastHitBy = f.i; o.shake = 6; this.hitstop = 5; o.juggle++; o.launch(f.face * (16 - dx * .012), -7.5, f.face * .035); FX.hitFx(o.x, o.y - 95, f.face, false, 8, '200,225,255'); }
+          else { this.damage(o, 7); f.focus = Math.min(100, f.focus + 7); o.lastHitBy = f.i; o.shake = 6; this.hitstop = 5; o.juggle++; o.launch(f.face * (16 - dx * .012), -7.5, f.face * .09); FX.hitFx(o.x, o.y - 95, f.face, false, 8, '200,225,255'); }
         }
         break;
       case 'pull':
@@ -1179,7 +1179,7 @@ const G = {
     const x = K.mid + off, y = -112;
     if (K.t % 2 === 0) { FX.sparks(x, y, 3, 10, 0, 0, TAU); FX.sparks(x, y, 1, 8, K.t % 4 ? sparkCol(L) : sparkCol(R), 0, TAU); }
     if (K.t % 14 === 1) { AU.clash(false); FX.flare(x, y, 60, '255,240,220', 8); } CAM.shake(.05);
-    if (Math.abs(K.m) >= 1 || K.t >= 150) {
+    if (Math.abs(K.m) >= .96 || K.t >= 150) {
       this.lock = null; CAM.release();
       if (Math.abs(K.m) < .12) { for (const f of [L, R]) { f.setState(ST.STAGGER); f.stun = 14; f.setAnim('block', 2, true); f.rec = 1.3; f.vx = -f.face * 8; } FX.clash(x, y, true, '', sparkCol(L), sparkCol(R)); AU.clash(true); return; }
       const W = K.m > 0 ? L : R, Z = W === L ? R : L;
@@ -1213,7 +1213,7 @@ const G = {
     if (t === 116) {
       this.damage(D, 12); D.lastHitBy = A.i; this.hitstop = 12; CAM.shake(.9); CAM.kick(.1, A.face * .04); FX.flash = .55; FX.flashCol = '255,255,255';
       FX.hitFx(D.x, -100, A.face, true, sparkCol(A), A.ch.col.rgb); FX.flare(D.x, -100, 220, '255,245,230', 20); FX.ring(D.x, -100, 20, 18, A.ch.col.rgb, 26, 6); AU.hit(true); AU.clash(true);
-      D.juggle = 3; D.launch(A.face * 7.5, -17, A.face * .04); this.slow(.25, .6); CAM.release();
+      D.juggle = 3; D.launch(A.face * 7.5, -17, A.face * .12); this.slow(.25, .6); CAM.release();
     }
     if (t > 116) { FX.dim *= .9; FX.bars *= .9; }
     if (t >= 146) { FX.dim = 0; FX.bars = 0; A.toStand(); this.ult = null; }
@@ -1240,7 +1240,7 @@ const G = {
         for (const f of this.f) {
           if (f.i === h.owner || (h.mask & (1 << f.i)) || !f.hurtable() || Math.abs(f.x - h.x) > h.w / 2 + 14 || f.y < (g ? -330 : -200) || this.phase !== 'fight') continue;
           h.mask |= 1 << f.i; this.damage(f, h.dmg); f.lastHitBy = h.owner >= 0 ? h.owner : 1 - f.i; f.shake = 8; this.hitstop = 5; CAM.shake(.3); AU.hit(true);
-          FX.hitFx(f.x, f.y - 80, sign(f.x - h.x), true, this.arena.hazSpark, h.rgb); f.juggle++; f.launch(sign(f.x - h.x || 1) * 3.5, g ? -15 : -9, .03);
+          FX.hitFx(f.x, f.y - 80, sign(f.x - h.x), true, this.arena.hazSpark, h.rgb); f.juggle++; f.launch(sign(f.x - h.x || 1) * 3.5, g ? -15 : -9, .09);
         }
       } else if (h.t > h.delay + h.dur + 20) h.on = false;
     }
@@ -1291,7 +1291,7 @@ const G = {
   koUpdate(dt) {
     if (this.phase !== 'ko') return; this.rt += dt;
     const w = this.winner, l = this.koLoser;
-    if (this.rt < 1.7 && l && !l.ringOut) CAM.focus(lerp(l.rx, w.rx, .3), -100 + Math.min(0, l.ry) * .5, 1.9); else if (this.rt < 1.7 && l) CAM.focus(l.rx, 60, 1.1); else CAM.release();
+    if (this.rt < 1.7 && l && !l.ringOut) CAM.focus(lerp(l.rx, w.rx, .3), -100 + Math.min(0, l.ry) * .5, 1.9); else if (this.rt < 1.2 && l) CAM.focus(l.rx, clamp(l.ry - 40, -100, 210), 1.15); else CAM.release();
     if (this.koStage === 0 && this.rt > 1.9) {
       this.koStage = 1;
       if (w) { this.banner(w.name + ' WINS', w.wins >= 2 ? '' : 'ROUND ' + this.round, 130, w.ch.col.pale); AU.announce(3); } else this.banner('DRAW', '', 120, '#ccc');
@@ -1443,7 +1443,7 @@ const ARENAS = [
     skyS: [[0, '#0b0305'], [.4, '#260707'], [.78, '#6a180b'], [1, '#c8480f']], floor: [[0, '#ffb44e'], [.012, '#d9561b'], [.06, '#7c1f0b'], [.3, '#3a0d07'], [1, '#110403']],
     cols: ['#43140d', '#2c0c09', '#1a0706', '#0a0303'], streak: ['rgba(255,95,20,.26)', 'rgba(255,196,96,.85)'], rim: 'rgba(255,120,40,.4)', rock: '#070303', rockLine: 'rgba(255,205,96,.55)' },
   { name: 'BRIDGE OF ASH', key: 'bridge', bridge: true, hazard: 'rock', dust: 0, ember: true, haze: true, refl: 0, hazRgb: '255,130,40', hazSpark: 2, glow: '255,120,36',
-    skyS: [[0, '#090307'], [.45, '#2b0810'], [.8, '#7c1e10'], [1, '#e86c1c']], floor: [[0, '#ffc45e'], [.02, '#ea681d'], [.14, '#ac320f'], [.5, '#611708'], [1, '#2c0a05']],
+    skyS: [[0, '#090307'], [.45, '#2b0810'], [.8, '#7c1e10'], [1, '#e86c1c']], floor: [[0, '#ffc45e'], [.015, '#d8571a'], [.12, '#8f2a0d'], [.5, '#4e1307'], [1, '#220804']],
     cols: ['#47160f', '#2c0c0b', '#180607'], streak: ['rgba(255,120,30,.3)', 'rgba(255,215,120,.9)'], rim: 'rgba(255,130,50,.45)', rock: '#070303', rockLine: 'rgba(255,205,96,.5)' },
   { name: 'OBSIDIAN TEMPLE', key: 'temple', bridge: false, hazard: 'geyser', dust: 2, ember: false, haze: false, refl: .85, rain: true, hazRgb: '120,150,255', hazSpark: 3, glow: '110,95,225',
     skyS: [[0, '#02030a'], [.5, '#0a0c24'], [.85, '#1c173e'], [1, '#3b2c6a']], floor: [[0, '#8f88dc'], [.012, '#3d3b7a'], [.06, '#15163a'], [.35, '#090a1c'], [1, '#03030a']],
@@ -1722,7 +1722,13 @@ function drawHazards(c, A) {
     c.globalCompositeOperation = 'lighter';
     if (h.type === 'geyser') {
       if (pre) { drawGlow(c, h.rgb, h.x, 2, 30 + u * 60, .35 + u * .5 + .15 * Math.sin(h.t * .8), .22); c.strokeStyle = `rgba(${h.rgb},${.4 + u * .5})`; c.lineWidth = 2; c.beginPath(); c.ellipse(h.x, 1, h.w * .55 * (.4 + u * .6), 7 * (.4 + u * .6), 0, 0, TAU); c.stroke(); }
-      else { const k = clamp(1 - (h.t - h.delay - h.dur) / 20, 0, 1), up = Math.min(1, (h.t - h.delay) / 5), hh = 380 * up, w = h.w * .5 * k; c.globalAlpha = .55 * k; c.fillStyle = `rgba(${h.rgb},1)`; c.fillRect(h.x - w, -hh, w * 2, hh); c.globalAlpha = .9 * k; c.fillStyle = '#ffe9b0'; c.fillRect(h.x - w * .4, -hh, w * .8, hh); drawGlow(c, h.rgb, h.x, -hh * .5, 190, .5 * k, 1.6); drawGlow(c, h.rgb, h.x, 0, 150, .7 * k, .25); if (k > .6 && h.t % 2 === 0) FX.sparks(h.x + vrr(-20, 20), -hh * vr(), 2, 9, A.hazSpark, -PI / 2, 2.2); }
+      else {
+        const k = clamp(1 - (h.t - h.delay - h.dur) / 20, 0, 1), up = Math.min(1, (h.t - h.delay) / 5), hh = 400 * up, w = h.w * .5 * k, wob = Math.sin(h.t * .9) * 4;
+        c.fillStyle = `rgba(${h.rgb},1)`;
+        for (let L = 0; L < 3; L++) { const ww = w * [1.15, .7, .32][L]; c.globalAlpha = [.3, .55, .95][L] * k; if (L === 2) c.fillStyle = '#fff1c8'; c.beginPath(); c.moveTo(h.x - ww * 1.25, 0); c.quadraticCurveTo(h.x - ww * .7 + wob, -hh * .5, h.x - ww * .45, -hh); c.quadraticCurveTo(h.x, -hh - 26 * k, h.x + ww * .45, -hh); c.quadraticCurveTo(h.x + ww * .7 + wob, -hh * .5, h.x + ww * 1.25, 0); c.closePath(); c.fill(); }
+        drawGlow(c, h.rgb, h.x, -hh * .5, 200, .5 * k, 1.6); drawGlow(c, h.rgb, h.x, 0, 160, .75 * k, .25); drawGlow(c, '255,240,200', h.x, -hh, 50, .7 * k);
+        if (k > .6 && h.t % 2 === 0) FX.sparks(h.x + vrr(-20, 20), -hh * vr(), 2, 9, A.hazSpark, -PI / 2, 2.2);
+      }
     } else if (h.type === 'bolt') {
       if (pre) { c.strokeStyle = `rgba(${h.rgb},${.3 + u * .6})`; c.lineWidth = 2.5; c.beginPath(); c.ellipse(h.x, 1, h.w * .5 * (1.4 - u * .4), 8, 0, 0, TAU); c.stroke(); drawGlow(c, h.rgb, h.x, 0, 60, .2 + u * .5, .25); c.globalAlpha = (.15 + u * .3); c.fillStyle = `rgba(${h.rgb},1)`; c.fillRect(h.x - 1, -700, 2, 700); }
     } else {
@@ -2078,11 +2084,12 @@ const UI = {
       txt(f.name, xin + s * bw, top - 12, 20, col.pale, s > 0 ? 'right' : 'left', col.mid);
       if (G.mode !== 'training') for (let k = 0; k < 2; k++) { c.fillStyle = k < f.wins ? col.light : 'rgba(255,255,255,.18)'; c.beginPath(); c.arc(xin + s * (12 + k * 20), top - 12, 6, 0, TAU); c.fill(); }
       if (G.mode === 'versus') txt(i ? 'P2' : 'P1', xin + s * 60, top - 12, 16, '#fff');
+      if (f.combo > 1 && f.comboT > 0) { const pu = 1 + Math.max(0, f.comboT - 70) * .035, al = Math.min(1, f.comboT / 20); txt(f.combo + ' HITS', xin + s * bw * .5, top + 104, 44 * pu, '#ffe9a8', 'center', 'rgba(255,130,30,1)', al); txt(Math.round(f.comboDmg) + ' DAMAGE', xin + s * bw * .5, top + 138, 16, '#ffcf9a', 'center', null, al); }
     }
     if (G.mode === 'training') { txt('∞', cx, top + 12, 44, '#fff'); this.trainHud(); }
     else { const t = Math.max(0, Math.ceil(G.timer / 60)); txt(String(t), cx, top + 14, 52, t <= 10 ? '#ff5a3a' : '#fff', 'center', 'rgba(255,90,20,.8)'); }
     if (G.lock) {
-      const m = G.lock.m, w = 360, y = VH * .78, lc = G.lock.L.ch.col, rc = G.lock.R.ch.col;
+      const m = G.lock.m, w = 360, y = VH * .9, lc = G.lock.L.ch.col, rc = G.lock.R.ch.col;
       c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(cx - w / 2 - 4, y - 14, w + 8, 28); c.fillStyle = lc.mid; c.fillRect(cx - w / 2, y - 10, w / 2 * (1 + m), 20); c.fillStyle = rc.mid; c.fillRect(cx - w / 2 + w / 2 * (1 + m), y - 10, w / 2 * (1 - m), 20);
       c.fillStyle = '#fff'; c.fillRect(cx + m * w / 2 - 3, y - 16, 6, 32);
       if (Math.sin(TIME * 22) > -.2) txt(touchSeen ? 'MASH ATTACK!' : 'MASH  J / K !', cx, y - 40, 34, '#fff', 'center', 'rgba(255,120,40,1)');

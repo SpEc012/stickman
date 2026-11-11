@@ -43,19 +43,31 @@ A single-file (`index.html`) 2D stickman saber duel. Canvas 2D + WebAudio, no as
 |---|---|---|---|---|---|---|---|---|---|---|
 | Light 1 | J | 6 | 3 | 22 | 6 | 17 | 11 | 7 | mid | cancels → Light 2 |
 | Light 2 | J,J | 7 | 3 | 25 | 7 | 18 | 12 | 8 | mid | cancels → Light 3 |
-| Light 3 | J,J,J | 9 | 4 | 36 | 10 | 24 | 15 | 12 | mid | big knockback, special-cancel |
-| Heavy overhead | K | 16 | 4 | 46 | 16 | 28 | 20 | 24 | high | cancels on hit → Rising launcher |
+| Light 3 | J,J,J | 9 | 4 | 36 | 10 | launch | 15 | 12 | mid | sends the target flying, special-cancel |
+| Heavy overhead | K | 16 | 4 | 46 | 16 | floor bounce | 20 | 24 | high | cancels on hit → Rising launcher |
 | Rising launcher | S+K or K,K | 13 | 4 | 44 | 13 | launch | 18 | 16 | mid | launches for juggles |
 | Low sweep | S+J | 9 | 4 | 32 | 8 | trip | 12 | 8 | low | knockdown |
 | Air slash | J (air) | 7 | 7 | — | 9 | 20 | 13 | 8 | high | |
 | Somersault slash | K (air) | 10 | 9 | — | 13 | 24 | 16 | 14 | high | |
-| Dash attack | U then J/K | 8 | 5 | 34 | 12 | 24 | 16 | 14 | mid | afterimages |
+| Dash attack | U then J/K | 8 | 5 | 34 | 12 | launch | 16 | 14 | mid | afterimages |
 | Throw | I+J | 5 | 2 | 30 | 12 | launch | — | — | — | beats block |
 | Guard break | I+K | 20 | 4 | 52 | 10 | 30 | crush | — | — | 35 Focus, unblockable |
 | Force push | L | 11 | 1 | 34 | 7 | launch | — | 10 | — | 30 Force |
 | Force pull | S+L | 12 | 1 | 30 | 0 | stagger | — | 6 | — | 22 Force |
 | Lightning | →+L (hold) | 14 | ≤70 | +16 | 0.45/f | — | — | drains | — | 25 Force + 0.5/f, parry reflects |
-| Duel of Fates | O | 12 | 6 | 50 | ~40 | cinematic | 24 | 20 | mid | 100 Focus |
+| Duel of Fates | O | 12 | 6 | 50 | ~40 | cinematic | 24 | 20 | mid | 100 Focus (50 if it whiffs) |
 
 Perfect parry: block pressed ≤ 6 frames (100 ms) before impact. Block = 10 % chip. Guard bar empties → guard crush.
-Two clashes in a row (or heavy vs heavy) → saber lock.
+Three clashes in quick succession (or heavy vs heavy) → saber lock (9 s cooldown).
+
+## AI tiers
+
+| Tier | Reaction (frames) | Parry | Block | Aggression | Combo accuracy | Story damage |
+|---|---|---|---|---|---|---|
+| Initiate | 24 | 3 % | 30 % | 0.32 | 0.40 | ×0.70 |
+| Adept | 17 | 9 % | 48 % | 0.46 | 0.60 | ×0.85 |
+| Knight | 12 | 18 % | 62 % | 0.58 | 0.78 | ×1.00 |
+| Master | 8 | 30 % | 76 % | 0.70 | 0.90 | ×1.06 |
+| Grandmaster | 5 | 42 % | 88 % | 0.82 | 1.00 | ×1.12 |
+
+An AI that is standing ready at close range reacts 7 frames sooner (anticipation), and reads the 2nd/3rd hit of a string 4 frames sooner. Parry chance is for heavy moves; lights are parried at 45 % of that rate.
