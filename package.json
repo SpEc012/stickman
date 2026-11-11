@@ -1,0 +1,9 @@
+{
+  "name": "ember-blades",
+  "version": "2.0.0",
+  "description": "Stickman saber duel with online lobbies. The server has no dependencies.",
+  "private": true,
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
