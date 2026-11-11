@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Ember Blades — Free Stickman Saber Battles Online | stickman.today</title>
+<title>Stickman Battle Online — Ember Blades | Free 50-Fighter Saber Brawls</title>
 <meta name="description" content="Glowing sabers, ragdoll physics and 50-fighter online brawls. Duel the AI, fight a friend on one keyboard, or open a lobby and share the code. Free, in your browser, no download.">
-<meta name="keywords" content="stickman game, stickman fighting game, stick fight, saber duel, laser sword game, online multiplayer brawl, 50 player battle, browser game, free game, no download, ragdoll physics, local 2 player, fighting game, io game, stickman.today, Ember Blades">
-<meta name="author" content="stickman.today">
+<meta name="keywords" content="stickman battle online, stickman battle, stickman game, stickman fighting game, stick fight, saber duel, laser sword game, online multiplayer brawl, 50 player battle, browser game, free game, no download, ragdoll physics, local 2 player, fighting game, io game, stickmanbattle.online, Ember Blades">
+<meta name="author" content="stickmanbattle.online">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#0b0305">
 <meta name="color-scheme" content="dark">
-<link rel="canonical" href="https://stickman.today/">
+<link rel="canonical" href="https://stickmanbattle.online/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -21,21 +21,21 @@
 <meta name="apple-mobile-web-app-title" content="Ember Blades">
 <!-- link previews: Open Graph (Discord, iMessage, Facebook, LinkedIn…) and X / Twitter -->
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="stickman.today">
-<meta property="og:url" content="https://stickman.today/">
-<meta property="og:title" content="EMBER BLADES — 50-fighter stickman saber battles">
+<meta property="og:site_name" content="stickmanbattle.online">
+<meta property="og:url" content="https://stickmanbattle.online/">
+<meta property="og:title" content="STICKMAN BATTLE ONLINE — Ember Blades: 50-fighter saber brawls">
 <meta property="og:description" content="Glowing sabers. Ragdoll physics. Online lobbies for up to 50. Play free in your browser — no download, no sign-up.">
-<meta property="og:image" content="https://stickman.today/og.jpg">
+<meta property="og:image" content="https://stickmanbattle.online/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="A white stickman with a blue saber clashes with a hooded black stickman with a red saber in a shower of sparks, in front of an erupting volcano.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="EMBER BLADES — 50-fighter stickman saber battles">
+<meta name="twitter:title" content="STICKMAN BATTLE ONLINE — Ember Blades: 50-fighter saber brawls">
 <meta name="twitter:description" content="Glowing sabers. Ragdoll physics. Online lobbies for up to 50. Free in your browser — no download.">
-<meta name="twitter:image" content="https://stickman.today/og.jpg">
+<meta name="twitter:image" content="https://stickmanbattle.online/og.jpg">
 <meta name="twitter:image:alt" content="Two stickmen clash glowing sabers in a shower of sparks in front of an erupting volcano.">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"VideoGame","name":"Ember Blades","url":"https://stickman.today/","image":"https://stickman.today/og.jpg","description":"A fast stickman saber fighting game: story duels against five AI masters, local two-player versus, and online brawls for up to 50 fighters with lobbies.","genre":["Fighting","Action","Multiplayer"],"gamePlatform":["Web browser","Desktop","Mobile"],"applicationCategory":"Game","operatingSystem":"Any","playMode":["SinglePlayer","MultiPlayer","CoOp"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":1,"maxValue":50},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+{"@context":"https://schema.org","@type":"VideoGame","name":"Ember Blades","url":"https://stickmanbattle.online/","image":"https://stickmanbattle.online/og.jpg","description":"A fast stickman saber fighting game: story duels against five AI masters, local two-player versus, and online brawls for up to 50 fighters with lobbies.","genre":["Fighting","Action","Multiplayer"],"gamePlatform":["Web browser","Desktop","Mobile"],"applicationCategory":"Game","operatingSystem":"Any","playMode":["SinglePlayer","MultiPlayer","CoOp"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":1,"maxValue":50},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
 </script>
 <style>
   html, body { margin: 0; height: 100%; background: #000; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; overscroll-behavior: none; }
@@ -47,7 +47,7 @@
 </head>
 <body>
 <canvas id="c" aria-label="Ember Blades game"></canvas>
-<h1 class="sr">Ember Blades — free online stickman saber battles</h1>
+<h1 class="sr">Stickman Battle Online — Ember Blades, free online stickman saber battles</h1>
 <noscript><p style="color:#fff;font:16px sans-serif;padding:24px">Ember Blades is a stickman saber fighting game with story duels, local versus and online brawls for up to 50 fighters. It needs JavaScript to run — please enable it and reload.</p></noscript>
 <input id="in_name" class="fld" maxlength="14" placeholder="YOUR NAME" autocomplete="off" spellcheck="false">
 <input id="in_code" class="fld" maxlength="4" placeholder="ABCD" autocomplete="off" spellcheck="false">
@@ -2692,7 +2692,7 @@ const UI = {
   title() {
     this.logo(VH * .34, 1);
     if (Math.sin(this.t * 4) > -.3) txt(touchSeen ? 'TAP TO START' : 'PRESS ENTER', VW / 2, VH * .7, 34, '#fff', 'center', 'rgba(255,120,40,.9)');
-    txt('STICKMAN.TODAY', VW / 2, VH - 52, 18, '#ffcf9a', 'center', 'rgba(255,120,40,.7)'); txt('KEYBOARD · GAMEPAD · TOUCH · ONLINE', VW / 2, VH - 28, 14, '#a08a80');
+    txt('STICKMANBATTLE.ONLINE', VW / 2, VH - 52, 18, '#ffcf9a', 'center', 'rgba(255,120,40,.7)'); txt('KEYBOARD · GAMEPAD · TOUCH · ONLINE', VW / 2, VH - 28, 14, '#a08a80');
   },
   select() {
     const c = ctx, st = this.step, mode = this.mode, two = mode === 'versus' || mode === 'training';
