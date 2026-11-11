@@ -111,7 +111,7 @@ Brawl maps have one-way platforms on two levels, and some have pits:
 | Block / parry | I | Numpad 5 or - | RB |
 | Ultimate | O | Numpad 6 or = | LB |
 
-**Mouse:** move it and the saber follows (see *Free saber* below). Left click = light, right click = heavy. Left-hand keys for mouse play: `Space` jump, `Q` force, `E` block, `Shift` dash, `X` ultimate.
+**Mouse:** left click = light, right click = heavy. With *Free saber* switched on (see below) the blade also follows the pointer. Left-hand keys for mouse play: `Space` jump, `Q` force, `E` block, `Shift` dash, `X` ultimate.
 
 `Esc` pause/menu · `Tab` scoreboard (brawls) · `M` mute · `F` fullscreen · `F1` debug overlay · Training: `T` dummy, `H` hitboxes, `R` reset.
 Touch buttons appear automatically on touch screens.
@@ -130,11 +130,12 @@ Menus are fully drivable from the pad (d-pad or stick, bottom button confirms, r
 
 ### Free saber (mouse or right stick)
 
-Move the mouse — or tilt the right stick — and the blade follows it on a spring, turning your fighter to face that side.
+**Off by default.** Turn it on in *Options → Free saber aim* (or set the right stick to "aims the saber" in *Options → Controller*). Then move the mouse — or tilt the right stick — and the blade follows it on a spring, turning your fighter to face that side.
 
 - **Cut:** swing the blade through an enemy. Damage (3 to 9) grows with how far and how fast you swung; tiny wiggles do nothing. One sweep can hit several enemies in a brawl. Two swinging blades that meet clash.
 - **Guard:** hold the blade still between you and the attacker and it blocks — raised for overheads, lowered for sweeps. Flick it into place just before the hit and it is a perfect parry.
-- Button attacks, throws, Force powers and ultimates all still work alongside it. Turn it off in *Options* if you prefer buttons only.
+- Button attacks, throws, Force powers and ultimates all still work alongside it.
+- While it is off, the right stick flick-dashes instead, and the mouse buttons still attack.
 
 
 ## Moves

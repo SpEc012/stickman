@@ -91,7 +91,7 @@ const EZ = {
 // Players can also override it on the online screen or with ?server=wss://… in the address.
 const SERVER_URL = '';
 const SAVE_KEY = 'emberblades.v1';
-const SET = { vol: 0.7, mute: false, quality: 'auto', scan: false, shake: true, touch: 'auto', unlocks: 0, bestStory: 0, fps: 0, res: 100, showFps: false, name: '', server: '', gpMap: [[0, 2, 3, 1, 7, 5, 4], [0, 2, 3, 1, 7, 5, 4]], gpPre: ['CLASSIC', 'CLASSIC'], rumble: 2, dead: 25, stickJump: true, padVs: 2, aim: true, rstick: 'aim' };   // fps: 0 = vsync, -1 = uncapped
+const SET = { vol: 0.7, mute: false, quality: 'auto', scan: false, shake: true, touch: 'auto', unlocks: 0, bestStory: 0, fps: 0, res: 100, showFps: false, name: '', server: '', gpMap: [[0, 2, 3, 1, 7, 5, 4], [0, 2, 3, 1, 7, 5, 4]], gpPre: ['CLASSIC', 'CLASSIC'], rumble: 2, dead: 25, stickJump: true, padVs: 2, freeAim: false, rstick: 'aim' };   // freeAim: the saber follows the mouse / right stick — off until the player turns it on   // fps: 0 = vsync, -1 = uncapped
 function loadSave() { try { const o = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); for (const k in SET) if (typeof o[k] === typeof SET[k]) SET[k] = o[k]; } catch (e) { /* storage unavailable */ } }
 function storeSave() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(SET)); } catch (e) { /* ignore */ } }
 loadSave();
@@ -244,7 +244,7 @@ function pollGamepads() {
     const lx = ax[0] || 0, ly = ax[1] || 0, mag = Math.hypot(lx, ly); let su = 0;
     if (mag > dz) { const nx = lx / mag, ny = ly / mag; if (nx < -.38) l = 1; if (nx > .38) r = 1; if (ny > .6) d = 1; if (ny < -.72) su = 1; moved = true; }
     const rx = g.mapping === 'standard' ? (ax[2] || 0) : 0, ry = g.mapping === 'standard' ? (ax[3] || 0) : 0, rm = Math.hypot(rx, ry); let dash = 0;
-    if (SET.aim && SET.rstick === 'aim') { if (rm > .35) { const ga = GP.aim[pi]; ga.x = rx / rm; ga.y = ry / rm; ga.t = now; moved = true; } }          // right stick aims the saber
+    if (SET.freeAim && SET.rstick === 'aim') { if (rm > .35) { const ga = GP.aim[pi]; ga.x = rx / rm; ga.y = ry / rm; ga.t = now; moved = true; } }          // right stick aims the saber
     else { if (Math.abs(rx) > .72 && Math.abs(st.rx) <= .72) { st.flT = now + 70; st.flD = rx > 0 ? 1 : -1; moved = true; } if (now < st.flT) { l = st.flD < 0 ? 1 : 0; r = st.flD > 0 ? 1 : 0; dash = 1; } }   // …or a flick dashes that way
     st.rx = rx;
     if (moved) { GP.used[pi] = now; if (lastDev !== 'pad') lastDev = 'pad'; }
@@ -293,7 +293,7 @@ function feedHuman(pi, single) {
   // free saber: the mouse (player 1) or the right stick says where the blade should point
   const pd = pads[pi], ga = GP.aim[pi], now = performance.now(), mouse = pi === 0 && lastDev === 'kb'; pd.aimOn = false;
   if (mouse) { if (MOUSE.l) raw[B.LIGHT] = 1; if (MOUSE.r) raw[B.HEAVY] = 1; }
-  if (SET.aim) {
+  if (SET.freeAim) {
     if (mouse && now - MOUSE.t < 2600) { pd.aimOn = true; pd.aimW = true; pd.ax = CAM.x + (MOUSE.x - VW / 2) / CAM.zoom; pd.ay = CAM.y + (MOUSE.y - VH / 2) / CAM.zoom; }
     else if (now - ga.t < 220) { pd.aimOn = true; pd.aimW = false; pd.ax = ga.x; pd.ay = ga.y; }
   }
@@ -2663,8 +2663,8 @@ function navHint(adj) { return lastDev === 'pad' ? 'D-PAD / STICK  ·  ' + gpGly
 function ultHint() { const o = keyName(6); return 'ULTIMATE:  ' + o + '  ·  ↓→ ' + o + '  ·  ↓↓ ' + o + '  ·  ←→ ' + o; }
 function moveHint(brawl) {
   const k = keyName;
-  if (lastDev === 'pad') return (SET.aim && SET.rstick === 'aim' ? 'RIGHT STICK swings the saber · ' : '') + 'STICK move · ' + k(0) + ' jump · ' + k(1) + ' light · ' + k(2) + ' heavy · ' + k(3) + ' force · ' + k(4) + ' dash · ' + k(5) + ' block · ' + k(6) + ' ultimate' + (brawl ? ' · ↓+' + k(0) + ' drop · ' + gpGlyph(0, 8) + ' scores' : '');
-  return (SET.aim ? 'MOUSE swings the saber · ' : '') + 'A/D move · W jump · S crouch · J light · K heavy · L force · U dash · I block · O ultimate' + (brawl ? ' · S+W drop · TAB scores' : '');
+  if (lastDev === 'pad') return (SET.freeAim && SET.rstick === 'aim' ? 'RIGHT STICK swings the saber · ' : '') + 'STICK move · ' + k(0) + ' jump · ' + k(1) + ' light · ' + k(2) + ' heavy · ' + k(3) + ' force · ' + k(4) + ' dash · ' + k(5) + ' block · ' + k(6) + ' ultimate' + (brawl ? ' · ↓+' + k(0) + ' drop · ' + gpGlyph(0, 8) + ' scores' : '');
+  return (SET.freeAim ? 'MOUSE swings the saber · ' : '') + 'A/D move · W jump · S crouch · J light · K heavy · L force · U dash · I block · O ultimate' + (brawl ? ' · S+W drop · TAB scores' : '');
 }
 const DUMMY_N = ['STAND', 'CROUCH', 'JUMP', 'BLOCK ALL', 'PARRY ALL', 'CPU'];
 const unlocked = ch => !ch.lock || (SET.unlocks & ch.lock) !== 0;
@@ -2700,7 +2700,7 @@ const UI = {
         it(() => 'SOUND: ' + (SET.mute ? 'MUTED' : 'ON'), () => { SET.mute = !SET.mute; AU.applyVol(); }, true),
         it(() => 'SCREEN SHAKE: ' + (SET.shake ? 'ON' : 'OFF'), () => { SET.shake = !SET.shake; }, true),
         it(() => 'TOUCH BUTTONS: ' + SET.touch.toUpperCase(), d => { const q = ['auto', 'on', 'off']; SET.touch = q[mod(q.indexOf(SET.touch) + (d || 1), 3)]; }, true),
-        it(() => 'FREE SABER AIM (MOUSE / RIGHT STICK): ' + (SET.aim ? 'ON' : 'OFF'), () => { SET.aim = !SET.aim; }, true),
+        it(() => 'FREE SABER AIM (MOUSE / RIGHT STICK): ' + (SET.freeAim ? 'ON' : 'OFF'), () => { SET.freeAim = !SET.freeAim; }, true),
         it('CONTROLLER  ▸', () => { storeSave(); this.padP = 0; this.go('pad'); }),
         it('GRAPHICS & FRAME RATE  ▸', () => { storeSave(); this.go('gfx'); }),
         it('BACK', () => this.goBack())]; break;
@@ -2709,7 +2709,7 @@ const UI = {
         it(() => 'LAYOUT: ' + SET.gpPre[P], dd => { const names = pre.concat(SET.gpPre[P] === 'CUSTOM' ? ['CUSTOM'] : []), nx = names[mod(names.indexOf(SET.gpPre[P]) + (dd || 1), names.length)]; SET.gpPre[P] = nx; if (GP_PRESETS[nx]) SET.gpMap[P] = GP_PRESETS[nx].slice(); }, true)];
         for (let a = 0; a < 7; a++) this.items.push(it(() => GP_ACTS[a] + ':  ' + (GP.capture && GP.capture.a === a ? 'PRESS A BUTTON…' : gpGlyph(P, SET.gpMap[P][a])), () => { GP.capture = { p: P, a, armed: false }; }));
         this.items.push(
-          it(() => 'RIGHT STICK: ' + (SET.aim && SET.rstick === 'aim' ? 'AIMS THE SABER' : 'FLICK TO DASH'), () => { SET.rstick = SET.rstick === 'aim' ? 'dash' : 'aim'; if (SET.rstick === 'aim') SET.aim = true; }, true),
+          it(() => 'RIGHT STICK: ' + (SET.freeAim && SET.rstick === 'aim' ? 'AIMS THE SABER' : 'FLICK TO DASH'), () => { SET.rstick = SET.rstick === 'aim' ? 'dash' : 'aim'; if (SET.rstick === 'aim') SET.freeAim = true; }, true),
           it(() => 'STICK UP JUMPS: ' + (SET.stickJump ? 'ON' : 'OFF'), () => { SET.stickJump = !SET.stickJump; }, true),
           it(() => 'STICK DEADZONE: ' + SET.dead + '%', dd => { SET.dead = 10 + mod(SET.dead - 10 + (dd || 1) * 5, 45); }, true),
           it(() => 'VIBRATION: ' + ['OFF', 'LOW', 'FULL'][SET.rumble], dd => { SET.rumble = mod(SET.rumble + (dd || 1), 3); rumble(P, .8, .8, 240, true); }, true),
@@ -2837,7 +2837,7 @@ const UI = {
     if (s === 'menu') { this.logo(VH * .15, .62); this.menu(VH * .36, 40); txt(navHint(false), VW / 2, VH - 24, 15, '#a08a80'); }
     else if (s === 'pause') { txt('PAUSED', VW / 2, VH * .2, 64, '#fff', 'center', 'rgba(255,120,40,.9)'); this.menu(VH * .34, 40); }
     else if (s === 'options') { txt('OPTIONS', VW / 2, VH * .16, 56, '#fff', 'center', 'rgba(255,120,40,.9)'); this.menu(VH * .3, 40); txt(navHint(true), VW / 2, VH - 30, 15, '#a08a80'); }
-    const aimM = s === 'fight' && G.mode !== 'attract' && SET.aim && lastDev === 'kb' && performance.now() - MOUSE.t < 2600;      // mouse aim: hide the pointer, draw a reticle
+    const aimM = s === 'fight' && G.mode !== 'attract' && SET.freeAim && lastDev === 'kb' && performance.now() - MOUSE.t < 2600;      // mouse aim: hide the pointer, draw a reticle
     if (aimM !== this.curHid) { this.curHid = aimM; cv.style.cursor = aimM ? 'none' : 'default'; }
     if (aimM) { const me = BR.on ? BR.me : G.f[0], col = me ? me.ch.col : COL.blue, pw = me ? me.swPow : 0; c.strokeStyle = col.light; c.lineWidth = 2; c.globalAlpha = .85; c.beginPath(); c.arc(MOUSE.x, MOUSE.y, 9 + pw * 8, 0, TAU); c.stroke(); c.fillStyle = '#fff'; c.fillRect(MOUSE.x - 1.5, MOUSE.y - 1.5, 3, 3); c.globalAlpha = 1; }
     if (SET.showFps && !DBG.on) txt(DBG.fps.toFixed(0) + ' FPS', VW - 10, VH - 12, 14, '#9f9', 'right');
@@ -2912,7 +2912,7 @@ const UI = {
   },
   controls() {
     const L = [['MOVE', 'A / D', '← / →'], ['JUMP  ·  CROUCH', 'W  ·  S', '↑  ·  ↓'], ['LIGHT SLASH', 'J', 'NUM 1  /  7'], ['HEAVY SLASH', 'K', 'NUM 2  /  8'], ['FORCE POWER', 'L', 'NUM 3  /  9'], ['DASH', 'U', 'NUM 4  /  0'], ['BLOCK / PARRY', 'I', 'NUM 5  /  -'], ['ULTIMATE', 'O', 'NUM 6  /  =']];
-    const M = ['J, J, J — three-hit combo   ·   K — overhead smash (stand-block it), K again on hit — launcher', 'S + K — rising launcher   ·   S + J — low sweep (crouch-block it)   ·   in the air: J slash, K somersault, U air-dash', 'U then J — dash attack   ·   back + U — backstep (invulnerable)   ·   S + W — drop through a platform', 'I + J — throw (beats block)   ·   I + K — guard break (35 Focus)', 'L — Force push   ·   S + L — Force pull   ·   → + L (hold) — lightning', 'Tap I just before a hit lands — PERFECT PARRY (also reflects lightning)', 'ULTIMATES (full Focus):   O — Duel of Fates   ·   ↓ → O — Stormbreaker   ·   ↓ ↓ O — Skyfall   ·   ← → O — Thousand Cuts', 'FINISHERS (opponent dazed on match point):   ↓ ↓ J — Cinderfall   ·   ← → K — Skyward Exile   ·   ↓ → L — Judgement Bolt', 'Three quick clashes start a SABER LOCK — mash J / K   ·   arrows are relative to the way you face', 'FREE SABER: move the mouse or the right stick and the blade follows — swing it through an enemy to cut, hold it still in their way to guard', 'Mouse play:  LEFT CLICK light  ·  RIGHT CLICK heavy  ·  SPACE jump  ·  Q force  ·  E block  ·  SHIFT dash  ·  X ultimate'];
+    const M = ['J, J, J — three-hit combo   ·   K — overhead smash (stand-block it), K again on hit — launcher', 'S + K — rising launcher   ·   S + J — low sweep (crouch-block it)   ·   in the air: J slash, K somersault, U air-dash', 'U then J — dash attack   ·   back + U — backstep (invulnerable)   ·   S + W — drop through a platform', 'I + J — throw (beats block)   ·   I + K — guard break (35 Focus)', 'L — Force push   ·   S + L — Force pull   ·   → + L (hold) — lightning', 'Tap I just before a hit lands — PERFECT PARRY (also reflects lightning)', 'ULTIMATES (full Focus):   O — Duel of Fates   ·   ↓ → O — Stormbreaker   ·   ↓ ↓ O — Skyfall   ·   ← → O — Thousand Cuts', 'FINISHERS (opponent dazed on match point):   ↓ ↓ J — Cinderfall   ·   ← → K — Skyward Exile   ·   ↓ → L — Judgement Bolt', 'Three quick clashes start a SABER LOCK — mash J / K   ·   arrows are relative to the way you face', 'FREE SABER (turn it on in Options): move the mouse or the right stick and the blade follows — swing it through an enemy to cut, hold it still in their way to guard', 'Mouse play:  LEFT CLICK light  ·  RIGHT CLICK heavy  ·  SPACE jump  ·  Q force  ·  E block  ·  SHIFT dash  ·  X ultimate'];
     const x = VW / 2, y0 = 84, sc = Math.min(1, VH / 720);
     txt('CONTROLS & MOVES', x, 44, 40, '#fff', 'center', 'rgba(255,120,40,.9)');
     txt('PLAYER 1', x + 40, y0, 18, '#7fb6ff'); txt('PLAYER 2', x + 220, y0, 18, '#ff7a80');
