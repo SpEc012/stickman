@@ -18,52 +18,19 @@ Then open `http://localhost:8080`. Other people on your network can join at `htt
 
 ## Putting it on the internet
 
-The page and the game server are two separate things.
+**Step-by-step instructions for stickmanbattle.online are in [SETUP.md](SETUP.md).** In short:
 
-**The page** (`index.html`, `og.jpg`, icons) is static. This repository already deploys it with GitHub Pages; point your domain at Pages in *Settings → Pages → Custom domain*.
+- **The page** (`index.html`, `og.jpg`, icons) is static and is deployed by GitHub Pages on every push.
+- **The game server** runs on Cloudflare Workers at `wss://play.stickmanbattle.online` (`worker.mjs`, configured by `wrangler.toml`), deployed by the *Deploy game server to Cloudflare* workflow once a `CLOUDFLARE_API_TOKEN` secret exists — or by hand with `npx wrangler deploy`.
+- **Players never enter an address.** The game connects to `SERVER_URL` (near the top of the script in `index.html`) by itself and keeps retrying until the server answers. `?server=wss://…` overrides it for testing.
 
-**The game server** can run in either of two places.
-
-### Option A — Cloudflare Workers (page on GitHub, server on Cloudflare)
-
-Needs a free Cloudflare account and Node on your computer. In this folder:
-
-```bash
-npx wrangler login
-```
-
-```bash
-npx wrangler deploy
-```
-
-Wrangler prints the server's address, something like `https://stickman-battle-server.<your-name>.workers.dev`. Use it with `wss://` in step "Tell the page" below. If your domain's DNS is on Cloudflare you can also give the Worker a custom domain (for example `play.stickmanbattle.online`) in the Cloudflare dashboard.
-
-How it works: one Durable Object holds every lobby in memory (`worker.mjs`, configured by `wrangler.toml`). Things to know:
-
-- Every WebSocket message counts towards your Cloudflare usage, and each player sends about 30 small messages a second while fighting. Check Cloudflare's current Durable Objects limits for your plan before a big launch.
-- When Cloudflare restarts the object (after a deploy, for instance) everyone is disconnected and lobbies start empty.
-- This version was tested in Cloudflare's local runtime (`wrangler dev`), not on a live Cloudflare account.
-
-### Option B — any Node host
-
-A small VPS, Render, Railway, Fly.io and similar all work. Node 18 or newer, nothing to install, listens on `PORT` (default 8080):
+Prefer a normal server? Any Node host works (Node 18+, nothing to install, listens on `PORT`, default 8080):
 
 ```bash
 node server.js
 ```
 
-`server.js` also serves the page, share image and icons itself, so you can point the domain straight at it instead of using Pages. `GET /health` returns the number of open lobbies and connected players.
-
-### Tell the page where the server is
-
-Near the top of the script in `index.html`, set:
-
-```js
-const SERVER_URL = 'wss://stickman-battle-server.your-name.workers.dev';
-```
-
-- A page served over `https://` can only connect to `wss://`. Cloudflare and managed hosts give you that automatically; on a bare VPS put Caddy or nginx in front of the Node port.
-- Players can also type a server address on the online screen, or open the page with `?server=wss://…`.
+`server.js` also serves the page, share image and icons, and `GET /health` returns the number of open lobbies and connected players. Opened from the machine running it (`http://localhost:8080`), the page uses that local server automatically. Otherwise set `SERVER_URL` to the host's `wss://` address.
 
 ### How online play works (and its limits)
 

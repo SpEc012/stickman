@@ -1,8 +1,16 @@
 # Cloudflare Workers config for the game server (worker.mjs + hub.mjs).
-#   npx wrangler deploy
+# Deployed automatically by .github/workflows/server.yml, or by hand:  npx wrangler deploy
 name = "stickman-battle-server"
 main = "worker.mjs"
 compatibility_date = "2025-06-01"
+workers_dev = true
+
+# The game connects to wss://play.stickmanbattle.online (SERVER_URL in index.html).
+# Cloudflare creates the DNS record and the certificate for this name by itself;
+# the domain only has to be an active zone on the same Cloudflare account.
+routes = [
+  { pattern = "play.stickmanbattle.online", custom_domain = true }
+]
 
 [[durable_objects.bindings]]
 name = "HUB"

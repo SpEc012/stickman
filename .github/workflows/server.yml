@@ -1,0 +1,42 @@
+# Deploys the game server (worker.mjs + hub.mjs) to Cloudflare Workers.
+# Needs one repository secret: CLOUDFLARE_API_TOKEN  (see SETUP.md, step 2).
+name: Deploy game server to Cloudflare
+
+on:
+  push:
+    branches: ["claude/lightsaber-duel-physics-3dq5cf", "main"]
+    paths: ["hub.mjs", "worker.mjs", "wrangler.toml", ".github/workflows/server.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "game-server"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Is the Cloudflare token set?
+        id: token
+        run: |
+          if [ -z "$CF_TOKEN" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN is not set, so the game server was not deployed. See SETUP.md, step 2."
+            echo "ready=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=yes" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Checkout
+        if: steps.token.outputs.ready == 'yes'
+        uses: actions/checkout@v4
+      - name: Deploy with Wrangler
+        if: steps.token.outputs.ready == 'yes'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy

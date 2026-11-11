@@ -87,9 +87,10 @@ const EZ = {
 };
 
 // Persistent settings / unlocks (never throws)
-// Online play: where server.js runs, e.g. 'wss://play.example.com'. Leave empty when server.js itself serves this page.
-// Players can also override it on the online screen or with ?server=wss://… in the address.
-const SERVER_URL = '';
+// Online play: where the game server lives (server.js on Node, or worker.mjs on Cloudflare — see SETUP.md).
+// Everyone connects here automatically. When the page is opened from the machine running server.js it uses that instead,
+// and ?server=wss://… in the address overrides both for testing.
+const SERVER_URL = 'wss://play.stickmanbattle.online';
 const SAVE_KEY = 'emberblades.v1';
 const SET = { vol: 0.7, mute: false, quality: 'auto', scan: false, shake: true, touch: 'auto', unlocks: 0, bestStory: 0, fps: 0, res: 100, showFps: false, name: '', server: '', gpMap: [[0, 2, 3, 1, 7, 5, 4], [0, 2, 3, 1, 7, 5, 4]], gpPre: ['CLASSIC', 'CLASSIC'], rumble: 2, dead: 25, stickJump: true, padVs: 2, freeAim: false, rstick: 'aim' };   // freeAim: the saber follows the mouse / right stick — off until the player turns it on   // fps: 0 = vsync, -1 = uncapped
 function loadSave() { try { const o = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); for (const k in SET) if (typeof o[k] === typeof SET[k]) SET[k] = o[k]; } catch (e) { /* storage unavailable */ } }
@@ -2143,16 +2144,22 @@ const BR = {
    Thin WebSocket client for server.js: lobbies, roster changes, combat events
    as JSON; fighter records as binary. See BR for who simulates what.        */
 const NET = {
-  ws: null, on: false, id: 0, room: null, host: false, ping: 0, lobbies: [], status: '', err: '', errT: -1e9, pingT: 0, listT: 0, want: null, url: '',
-  defaultUrl() { const q = URLQ.get('server'); if (q) return q; if (SET.server) return SET.server; if (SERVER_URL) return SERVER_URL; if (location.protocol === 'http:' || location.protocol === 'https:') return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host; return 'ws://localhost:8080'; },
+  ws: null, on: false, id: 0, room: null, host: false, ping: 0, lobbies: [], status: '', err: '', errT: -1e9, pingT: 0, listT: 0, want: null, url: '', fails: 0, retryT: 0, tryUrl: '',
+  defaultUrl() {
+    const q = URLQ.get('server'); if (q) return q;
+    const web = location.protocol === 'http:' || location.protocol === 'https:', local = web && /^(localhost$|127\.|10\.|192\.168\.|\[::1\])/.test(location.hostname);
+    if (local) return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;       // served by server.js on this machine / network
+    if (SERVER_URL) return SERVER_URL;
+    return SET.server || (web ? (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host : 'ws://localhost:8080');
+  },
   connect(url) {
     if (this.ws) { const old = this.ws; this.ws = null; try { old.close(); } catch (e) { /* already closed */ } }
     this.on = false; this.room = null; this.status = 'CONNECTING…'; this.err = ''; this.url = url;
     let ws; try { ws = new WebSocket(url); } catch (e) { this.status = ''; this.fail('That server address is not valid.'); return; }
     ws.binaryType = 'arraybuffer'; this.ws = ws;
-    ws.onopen = () => { if (this.ws !== ws) return; this.on = true; this.status = ''; this.hello(); this.send({ t: 'list' }); if (this.want) { this.send(this.want); this.want = null; } };
+    ws.onopen = () => { if (this.ws !== ws) return; this.on = true; this.status = ''; this.fails = 0; this.err = ''; this.hello(); this.send({ t: 'list' }); if (this.want) { this.send(this.want); this.want = null; } };
     ws.onmessage = e => { if (this.ws !== ws) return; if (typeof e.data === 'string') { let m; try { m = JSON.parse(e.data); } catch (x) { return; } this.msg(m); } else if (BR.on && BR.online) BR.recvStates(new DataView(e.data)); };
-    ws.onclose = () => { if (this.ws !== ws) return; const was = this.on; this.on = false; this.ws = null; this.status = ''; this.fail(was ? 'Connection to the server was lost.' : 'No game server answered at ' + url.replace(/^wss?:\/\//, '') + ' — type its address in SERVER below, then RECONNECT.'); this.room = null; if (BR.online && BR.on) { G.startMatch('attract'); UI.go('online'); } else if (UI.screen === 'lobby' || UI.screen === 'bres') UI.go('online'); };
+    ws.onclose = () => { if (this.ws !== ws) return; const was = this.on; this.on = false; this.ws = null; this.status = ''; this.fails++; this.retryT = 4; this.fail(was ? 'Lost the connection to the online servers — reconnecting…' : 'The online servers are not answering — trying again…'); this.room = null; if (BR.online && BR.on) { G.startMatch('attract'); UI.go('online'); } else if (UI.screen === 'lobby' || UI.screen === 'bres') UI.go('online'); };
   },
   fail(msg) { this.err = msg; this.errT = performance.now(); },
   hello() { this.send({ t: 'hello', name: SET.name, look: G.p1, col: COLKEYS[G.p1] || 'blue' }); },
@@ -2162,7 +2169,7 @@ const NET = {
   ask(o) { if (this.on) { this.hello(); this.send(o); } else { this.want = o; this.connect(this.url || this.defaultUrl()); } },
   leave() { this.send({ t: 'leave' }); this.room = null; },
   tick(dt) {
-    if (!this.on) return;
+    if (!this.on) { if (!this.ws && UI.screen === 'online' && (this.retryT -= dt) <= 0) { this.retryT = 5; this.connect(this.tryUrl || this.defaultUrl()); } return; }      // keep trying on our own
     if ((this.pingT -= dt) <= 0) { this.pingT = 2; this.send({ t: 'ping', ts: performance.now(), rtt: this.ping }); }
     if (UI.screen === 'online' && (this.listT -= dt) <= 0) { this.listT = 3; this.send({ t: 'list' }); }
   },
@@ -2683,8 +2690,8 @@ const UI = {
     this.screen = s; this.t = 0; this.sel = 0; this.hideFields();
     if (s === 'online') {
       if (!SET.name) SET.name = 'PLAYER' + (10 + Math.floor(Math.random() * 90));
-      const nm = document.getElementById('in_name'), sv = document.getElementById('in_srv'); nm.value = SET.name; if (!sv.value) sv.value = NET.url || NET.defaultUrl();
-      if (!NET.on && !NET.status) NET.connect(sv.value); else NET.send({ t: 'list' });
+      const nm = document.getElementById('in_name'), sv = document.getElementById('in_srv'); nm.value = SET.name; if (!sv.value) sv.value = NET.defaultUrl();
+      if (!NET.on && !NET.ws) { NET.retryT = 5; NET.connect(NET.tryUrl || NET.defaultUrl()); } else NET.send({ t: 'list' });      // connects by itself
     }
     this.build();
   },
@@ -2738,7 +2745,7 @@ const UI = {
         it('QUICK JOIN', () => NET.ask({ t: 'quick' })),
         it('JOIN WITH CODE', () => { if (code().length === 4) NET.ask({ t: 'join', code: code() }); else if (lastDev === 'pad') this.openOsk('code'); else { NET.fail('Type the four-character lobby code first.'); document.getElementById('in_code').focus(); } }),
         it('CHANGE NAME', () => { if (lastDev === 'pad') this.openOsk('name'); else document.getElementById('in_name').focus(); }),
-        it('RECONNECT', () => { SET.server = document.getElementById('in_srv').value.trim(); storeSave(); NET.connect(SET.server || NET.defaultUrl()); }),
+        it('RECONNECT', () => { const v = document.getElementById('in_srv'), shown = v.style.display !== 'none' && v.value.trim(); NET.tryUrl = shown && v.value.trim() !== NET.defaultUrl() ? v.value.trim() : ''; NET.retryT = 5; NET.connect(NET.tryUrl || NET.defaultUrl()); }),
         it('BACK', () => { storeSave(); this.go('menu'); })]; break; }
       case 'lobby': { const R = NET.room, s = R ? R.set : BR.set, cy = (n, v, d) => mod(v + (d || 1), n), push = () => NET.send({ t: 'set', set: s }), sel = this.sel; this.items = [];
         const chars = () => { let i = G.p1; do { i = mod(i + 1, CHARS.length); } while (!unlocked(CHARS[i])); return i; }, charsB = () => { let i = G.p1; do { i = mod(i - 1, CHARS.length); } while (!unlocked(CHARS[i])); return i; };
@@ -3047,11 +3054,11 @@ const UI = {
   online() {
     const c = ctx, wide = VW >= 1100, lx = wide ? VW * .27 : VW / 2, fw = 340;
     txt('ONLINE BRAWL', VW / 2, 50, 48, '#fff', 'center', 'rgba(255,120,40,.9)');
-    txt(NET.on ? 'CONNECTED  ·  ' + NET.ping + ' MS  ·  ' + NET.url.replace(/^wss?:\/\//, '') : (NET.status || 'NOT CONNECTED'), VW / 2, 88, 15, NET.on ? '#9fe89f' : '#ff8a70');
+    txt(NET.on ? 'ONLINE  ·  ' + NET.ping + ' MS' : NET.status ? 'CONNECTING…' : 'OFFLINE  ·  RETRYING', VW / 2, 88, 15, NET.on ? '#9fe89f' : '#ffb060');
     txt('YOUR NAME', lx - fw / 2 - 12, 132, 15, '#c9b4a8', 'right'); this.field('in_name', lx - fw / 2, 114, fw, 36);
     txt('LOBBY CODE', lx - fw / 2 - 12, 178, 15, '#c9b4a8', 'right'); this.field('in_code', lx - fw / 2, 160, fw, 36);
     this.menu(232, 36, lx, 430);
-    txt('SERVER', lx - fw / 2 - 12, VH - 62, 14, '#a08a80', 'right'); this.field('in_srv', lx - fw / 2, VH - 78, fw, 30);
+    if (!NET.on && (NET.fails >= 3 || URLQ.get('server'))) { txt('SERVER', lx - fw / 2 - 12, VH - 62, 14, '#a08a80', 'right'); this.field('in_srv', lx - fw / 2, VH - 78, fw, 30); } else document.getElementById('in_srv').style.display = 'none';   // only offered when the usual server cannot be reached
     if (performance.now() - NET.errT < 6000) txt(NET.err, VW / 2, VH - 20, 17, '#ff8a70');
     if (!wide) return;
     const x = VW * .54, w = VW * .42, y0 = 124; txt('OPEN LOBBIES', x, y0, 20, '#ffcf9a', 'left'); txt(NET.lobbies.length + ' FOUND', x + w, y0, 14, '#a08a80', 'right');
